@@ -505,7 +505,7 @@ public:
             // Draw only the icon centered inside the item rect.
             painter->save();
             painter->setRenderHint(QPainter::Antialiasing, true);
-            const QRect iconRect = option.rect.adjusted(6, 6, -6, -6);
+            const QRect iconRect = option.rect.adjusted(8, 8, -8, -8);
             if (auto icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole)); !icon.isNull()) {
                 const QSize isz = option.decorationSize;
                 const QPoint center = iconRect.center();
@@ -528,10 +528,10 @@ public:
         painter->save();
         painter->setRenderHint(QPainter::Antialiasing, true);
 
-        const int padding = 12;
+        const int padding = 14;
         const QRect contentRect = opt.rect.adjusted(padding, padding, -padding, -padding);
         const QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
-        const int iconSide = opt.decorationSize.isValid() ? opt.decorationSize.width() : 22;
+        const int iconSide = opt.decorationSize.isValid() ? opt.decorationSize.width() : 28;
         QRect iconRect(contentRect.left(),
                        contentRect.center().y() - iconSide / 2,
                        iconSide,
@@ -539,17 +539,17 @@ public:
 
         QFont titleFont = opt.font;
         if (titleFont.pointSizeF() > 0) {
-            titleFont.setPointSizeF(titleFont.pointSizeF() + 1.0);
+            titleFont.setPointSizeF(titleFont.pointSizeF() + 2.0);
         } else if (titleFont.pointSize() > 0) {
-            titleFont.setPointSize(titleFont.pointSize() + 1);
+            titleFont.setPointSize(titleFont.pointSize() + 2);
         }
         titleFont.setBold(true);
 
         QFont descriptionFont = opt.font;
         if (descriptionFont.pointSizeF() > 0) {
-            descriptionFont.setPointSizeF(max(descriptionFont.pointSizeF() - 0.5, 7.5));
+            descriptionFont.setPointSizeF(max(descriptionFont.pointSizeF() + 0.5, 9.5));
         } else if (descriptionFont.pointSize() > 0) {
-            descriptionFont.setPointSize(max(descriptionFont.pointSize() - 1, 7));
+            descriptionFont.setPointSize(max(descriptionFont.pointSize() + 1, 10));
         }
         descriptionFont.setBold(false);
 
@@ -571,7 +571,7 @@ public:
         if (!icon.isNull()) {
             icon.paint(painter, iconRect);
         }
-        QRect textRect = contentRect.adjusted(iconSide + 10, 0, 0, 0);
+        QRect textRect = contentRect.adjusted(iconSide + 14, 0, 0, 0);
         painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, title);
 
         painter->restore();
@@ -586,9 +586,9 @@ public:
 
         QFont titleFont = opt.font;
         if (titleFont.pointSizeF() > 0) {
-            titleFont.setPointSizeF(titleFont.pointSizeF() + 1.0);
+            titleFont.setPointSizeF(titleFont.pointSizeF() + 2.0);
         } else if (titleFont.pointSize() > 0) {
-            titleFont.setPointSize(titleFont.pointSize() + 1);
+            titleFont.setPointSize(titleFont.pointSize() + 2);
         }
         titleFont.setBold(true);
 
@@ -603,17 +603,17 @@ public:
             // In collapsed mode, prefer a narrow, icon-only width that fits the
             // decoration size plus a small padding so the list becomes a slim
             // vertical strip of icons.
-            const int w = opt.decorationSize.width() + 16;
-            const int h = max(72, opt.decorationSize.height() + 12);
+            const int w = opt.decorationSize.width() + 22;
+            const int h = max(84, opt.decorationSize.height() + 24);
             return {w, h};
         }
-        const int iconWidth = opt.decorationSize.isValid() ? opt.decorationSize.width() : 22;
-        const int availableWidth = max(160, measuredWidth - iconWidth - 80);
+        const int iconWidth = opt.decorationSize.isValid() ? opt.decorationSize.width() : 28;
+        const int availableWidth = max(180, measuredWidth - iconWidth - 96);
         const QFontMetrics titleMetrics(titleFont);
         const QRect titleRect = titleMetrics.boundingRect(0, 0, availableWidth, 0, Qt::TextSingleLine, title);
 
-        const int padding = 24;
-        const int rowHeight = max(56, iconWidth + padding);
+        const int padding = 30;
+        const int rowHeight = max(68, iconWidth + padding);
         return {measuredWidth, max(rowHeight, titleRect.height() + padding)};
     }
 };
@@ -750,7 +750,9 @@ void MainWindow::setupUi() {
     reportsList = ui->reportsList;
     accountsList = ui->accountsList;
     navigationList = ui->navigationList;
+    navigationPanel = ui->navigationPanel;
     refreshButton = ui->refreshButton;
+    QWidget *tabsContainer = nullptr;
 
     auto ensureSummaryVisible = [](QLabel *label, const QString &value) {
         if (!label) return;
@@ -822,27 +824,14 @@ void MainWindow::setupUi() {
     if (tabs) {
         tabs->setDocumentMode(false);
         if (auto *bar = tabs->tabBar()) {
-            bar->show();
+            bar->hide();
+            bar->setVisible(false);
+            bar->setEnabled(false);
             bar->setExpanding(false);
-            bar->setStyleSheet(
-                "QTabBar::tab {"
-                "  background: #e2e8f0;"
-                "  color: #0f172a;"
-                "  padding: 8px 16px;"
-                "  border: 1px solid #cbd5f5;"
-                "  border-bottom: none;"
-                "  border-top-left-radius: 6px;"
-                "  border-top-right-radius: 6px;"
-                "  margin-right: 4px;"
-                "}"
-                "QTabBar::tab:selected {"
-                "  background: #ffffff;"
-                "  color: #1d4ed8;"
-                "  border-color: #cbd5f5;"
-                "}"
-                "QTabBar::tab:hover {"
-                "  background: #f8fafc;"
-                "}");
+            bar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+            bar->setFixedHeight(0);
+            bar->setStyleSheet("QTabBar::tab { height:0px; margin:0; padding:0; border:none; }");
+            tabs->setTabBarAutoHide(true);
         }
         tabs->setStyleSheet(QString());
         connect(tabs, &QTabWidget::currentChanged, [this](const int index) {
@@ -851,6 +840,38 @@ void MainWindow::setupUi() {
                 navigationList->setCurrentRow(index);
             }
         });
+
+        // Wrap tabs in a container with a header title to replace the tab bar
+        if (ui->centralLayout) {
+            ui->centralLayout->removeWidget(tabs);
+            tabsContainer = new QWidget(this);
+            auto *contentLayout = new QVBoxLayout(tabsContainer);
+            contentLayout->setContentsMargins(0, 0, 0, 0);
+            contentLayout->setSpacing(8);
+            auto *headerLabel = new QLabel(tr("HỆ THỐNG QUẢN LÝ CHO THUÊ SÁCH VÀ TRUYỆN"), tabsContainer);
+            QFont headerFont = headerLabel->font();
+            if (headerFont.pointSizeF() > 0) {
+                headerFont.setPointSizeF(headerFont.pointSizeF() + 3.0);
+            } else if (headerFont.pointSize() > 0) {
+                headerFont.setPointSize(headerFont.pointSize() + 3);
+            }
+            headerFont.setBold(true);
+            headerLabel->setFont(headerFont);
+            headerLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+            headerLabel->setStyleSheet(
+                "color: #0f172a;"
+                "background: #ffffff;"
+                "padding: 10px 14px;"
+                "border: 1px solid #e5e7eb;"
+                "border-radius: 10px;"
+                "letter-spacing: 0.5px;"
+            );
+            contentLayout->addWidget(headerLabel);
+            contentLayout->addWidget(tabs, 1);
+            ui->centralLayout->addWidget(tabsContainer, 1);
+            ui->centralLayout->setStretch(0, 0);
+            ui->centralLayout->setStretch(1, 1);
+        }
     }
 
     if (navigationList) {
@@ -859,9 +880,16 @@ void MainWindow::setupUi() {
         navigationList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
         navigationList->setWordWrap(false);  // giữ text một dòng để icon & chữ thẳng hàng
         navigationList->setUniformItemSizes(true);
-        navigationList->setSpacing(4);
+        navigationList->setSpacing(8);
         navigationList->setTextElideMode(Qt::ElideNone);
-        navigationList->setIconSize(QSize(22, 22));
+        navigationList->setIconSize(QSize(28, 28));
+        QFont navFont = navigationList->font();
+        if (navFont.pointSizeF() > 0) {
+            navFont.setPointSizeF(navFont.pointSizeF() + 1.5);
+        } else if (navFont.pointSize() > 0) {
+            navFont.setPointSize(navFont.pointSize() + 1);
+        }
+        navigationList->setFont(navFont);
         navigationList->setItemDelegate(new NavigationListDelegate(navigationList));
         connect(navigationList, &QListWidget::currentRowChanged, this, &MainWindow::handleNavigationSelection);
     }
@@ -875,8 +903,16 @@ void MainWindow::setupUi() {
         navRail->setFixedWidth(navCollapsedWidth);
         navRail->setVisible(false);
         auto railLayout = new QVBoxLayout(navRail);
-        railLayout->setContentsMargins(6, 8, 6, 8);
-        railLayout->setSpacing(6);
+        railLayout->setContentsMargins(10, 12, 10, 12);
+        railLayout->setSpacing(8);
+        navRail->setStyleSheet(
+            "#navRail {"
+            "  background: #ffffff;"
+            "  border-radius: 12px;"
+            "  border: 1px solid #e5e7eb;"
+            "  color: #0f172a;"
+            "}"
+        );
         // Placeholder for top icons; we'll populate after setupNavigationMenu()
     }
 
@@ -927,18 +963,32 @@ void MainWindow::setupUi() {
         // Parent the rail button to the main window so it remains accessible
         // when the navigationList itself is hidden (Off mode).
         navRailButton = new QPushButton(this);
-        navRailButton->setText(QStringLiteral("»"));
-        navRailButton->setFixedSize(28, 28);
+        navRailButton->setText(QStringLiteral("☰"));
+        navRailButton->setFixedSize(40, 40);
         navRailButton->setToolTip(tr("Mở menu điều hướng"));
         navRailButton->setCursor(Qt::PointingHandCursor);
-        navRailButton->setVisible(false);
+        navRailButton->setVisible(true);
         navRailButton->setStyleSheet(
-            "QPushButton { border-radius:14px; background: rgba(0,0,0,0.06); }"
-            "QPushButton::hover { background: rgba(0,0,0,0.12); }"
+            "QPushButton {"
+            "  border: 1px solid #e5e7eb;"
+            "  border-radius:14px;"
+            "  background: #ffffff;"
+            "  padding: 6px;"
+            "  font-size: 22px;"
+            "  font-weight: 600;"
+            "  color: #111827;"
+            "}"
+            "QPushButton::hover { background: #f3f4f6; }"
         );
-        connect(navRailButton, &QPushButton::clicked, [this]() { showNavigationPopupMenu(); });
+        connect(navRailButton, &QPushButton::clicked, [this]() {
+            navOverlayOpen = !navOverlayOpen;
+            if (navRailButton) {
+                navRailButton->setText(navOverlayOpen ? QStringLiteral("✕") : QStringLiteral("☰"));
+            }
+            setNavigationCollapsed(true, false);
+        });
 
-        setNavigationCollapsed(false, true);
+        setNavigationCollapsed(true, false);
         repositionNavRailButton();
     }
 
@@ -1309,6 +1359,9 @@ void MainWindow::configureStatsTab() {
     const auto customStartDateEdit = searchWidget->findChild<QDateEdit *>(QStringLiteral("customStartDateEdit"));
     const auto customEndDateEdit = searchWidget->findChild<QDateEdit *>(QStringLiteral("customEndDateEdit"));
     if (customStartDateEdit && customEndDateEdit) {
+        const QDate today = QDate::currentDate();
+        customStartDateEdit->setDate(today);
+        customEndDateEdit->setDate(today);
         customStartDateEdit->setVisible(false);
         customEndDateEdit->setVisible(false);
     }
@@ -1319,7 +1372,7 @@ void MainWindow::configureStatsTab() {
         timePeriodCombo->addItem(tr("Tháng này"));
         timePeriodCombo->addItem(tr("Tháng trước"));
         timePeriodCombo->addItem(tr("Tùy chọn..."));
-        timePeriodCombo->setCurrentIndex(2);
+        timePeriodCombo->setCurrentIndex(0);
         if (customStartDateEdit && customEndDateEdit) {
             connect(timePeriodCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=](const int idx) {
                 const bool custom = (idx == 4);
@@ -1334,7 +1387,7 @@ void MainWindow::configureStatsTab() {
     }
 
     const QDate today = QDate::currentDate();
-    statsStartDate = QDate(today.year(), today.month(), 1);
+    statsStartDate = today;
     statsEndDate = today;
 
     if (!statsWidget && ui->statsTab) {
@@ -3812,10 +3865,10 @@ void MainWindow::setupNavigationMenu() {
             item->setIcon(QIcon(iconPath));
         }
         item->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-        item->setSizeHint(QSize(220, 56));
+        item->setSizeHint(QSize(240, 72));
     }
 
-    navigationList->setIconSize(QSize(22, 22));
+    navigationList->setIconSize(QSize(28, 28));
     navigationList->setCurrentRow(tabs->currentIndex());
 
     // Populate the navRail (icon-only) so it mirrors the full navigation
@@ -3829,37 +3882,145 @@ void MainWindow::setupNavigationMenu() {
             delete li;
         }
         if (auto *railLayout = qobject_cast<QVBoxLayout *>(navRail->layout())) {
-            // Top spacer
-            railLayout->addSpacing(6);
-            // create buttons for each nav entry
+            // Close button row
+            auto *closeBtn = new QPushButton(QStringLiteral("✕"), navRail);
+            closeBtn->setFixedSize(36, 36);
+            closeBtn->setCursor(Qt::PointingHandCursor);
+            closeBtn->setStyleSheet(
+                "QPushButton {"
+                "  border: none;"
+                "  background: transparent;"
+                "  font-size: 18px;"
+                "  font-weight: 600;"
+                "}"
+                "QPushButton::hover {"
+                "  background: rgba(0,0,0,0.06);"
+                "  border-radius: 12px;"
+                "}"
+            );
+            connect(closeBtn, &QPushButton::clicked, this, [this]() {
+                navOverlayOpen = false;
+                if (navRailButton) {
+                    navRailButton->setText(QStringLiteral("☰"));
+                }
+                setNavigationCollapsed(true, false);
+            });
+            railLayout->addWidget(closeBtn, 0, Qt::AlignLeft);
+            railLayout->addSpacing(4);
+
+            // create buttons for each nav entry (text only, like a sheet)
             for (int i = 0; i < entries.size(); ++i) {
                 const NavEntry &e = entries.at(i);
-                auto *b = new QToolButton(navRail);
-                b->setIcon(QIcon(resolveIconPath(e.iconName)));
-                b->setIconSize(QSize(22,22));
-                b->setToolButtonStyle(Qt::ToolButtonIconOnly);
-                b->setFixedSize(44,44);
-                b->setToolTip(e.title);
-                // Connect click to select the tab
-                connect(b, &QToolButton::clicked, this, [this, i]() {
+                auto *b = new QPushButton(QStringLiteral("  %1").arg(e.title), navRail);
+                b->setCursor(Qt::PointingHandCursor);
+                b->setStyleSheet(
+                    "QPushButton {"
+                    "  border: none;"
+                    "  background: transparent;"
+                    "  text-align: left;"
+                    "  padding: 10px 12px;"
+                    "  font-size: 14px;"
+                    "  font-weight: 600;"
+                    "  color: #111827;"
+                    "}"
+                    "QPushButton::hover {"
+                    "  background: rgba(0,0,0,0.04);"
+                    "  border-radius: 10px;"
+                    "}"
+                );
+                if (const QString iconPath = resolveIconPath(e.iconName); !iconPath.isEmpty()) {
+                    b->setIcon(QIcon(iconPath));
+                    b->setIconSize(QSize(20,20));
+                }
+                connect(b, &QPushButton::clicked, this, [this, i]() {
                     if (tabs && i >= 0 && i < tabs->count()) tabs->setCurrentIndex(i);
+                    navOverlayOpen = false;
+                    if (navRailButton) {
+                        navRailButton->setText(QStringLiteral("☰"));
+                    }
+                    setNavigationCollapsed(true, false);
                 });
                 railLayout->addWidget(b);
             }
             railLayout->addStretch(1);
-            // Bottom action buttons: reload and logout
-            auto *reloadBtn = new QPushButton(tr("Tải lại"), navRail);
-            reloadBtn->setFixedHeight(36);
+
+            // Bottom container to keep actions visible with background
+            auto *bottomBox = new QWidget(navRail);
+            bottomBox->setObjectName(QStringLiteral("navBottomBox"));
+            bottomBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+            bottomBox->setStyleSheet(
+                "#navBottomBox {"
+                "  background: #e2e8f0;"
+                "  border-top: 1px solid #cbd5e1;"
+                "  border-radius: 10px;"
+                "}"
+            );
+            auto *bottomLayout = new QVBoxLayout(bottomBox);
+            bottomLayout->setContentsMargins(10, 12, 10, 12);
+            bottomLayout->setSpacing(8);
+
+            auto *reloadBtn = new QPushButton(QStringLiteral("↻  %1").arg(tr("Tải lại")), bottomBox);
+            reloadBtn->setObjectName(QStringLiteral("overlayReloadButton"));
+            reloadBtn->setFixedHeight(44);
+            reloadBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            reloadBtn->setCursor(Qt::PointingHandCursor);
+            reloadBtn->setStyleSheet(
+                "QPushButton#overlayReloadButton {"
+                "  border: none;"
+                "  background: #2563eb;"
+                "  text-align: center;"
+                "  padding: 10px 12px;"
+                "  font-size: 14px;"
+                "  font-weight: 700;"
+                "  color: #ffffff;"
+                "  border-radius: 10px;"
+                "}"
+                "QPushButton#overlayReloadButton:hover {"
+                "  background: #1d4ed8;"
+                "}"
+            );
             connect(reloadBtn, &QPushButton::clicked, [this]() {
                 reloadData();
                 notifyEvent(tr("Đã tải lại."), EventSeverity::Success, 1500);
+                navOverlayOpen = false;
+                if (navRailButton) {
+                    navRailButton->setText(QStringLiteral("☰"));
+                }
+                setNavigationCollapsed(true, false);
             });
-            railLayout->addWidget(reloadBtn);
-            auto *logoutBtn = new QPushButton(tr("Đăng xuất"), navRail);
-            logoutBtn->setFixedHeight(36);
-            connect(logoutBtn, &QPushButton::clicked, this, &MainWindow::handleLogout);
-            railLayout->addWidget(logoutBtn);
-            railLayout->addSpacing(6);
+            bottomLayout->addWidget(reloadBtn);
+
+            auto *logoutBtn = new QPushButton(QStringLiteral("⎋  %1").arg(tr("Đăng xuất")), bottomBox);
+            logoutBtn->setObjectName(QStringLiteral("overlayLogoutButton"));
+            logoutBtn->setFixedHeight(44);
+            logoutBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            logoutBtn->setCursor(Qt::PointingHandCursor);
+            logoutBtn->setStyleSheet(
+                "QPushButton#overlayLogoutButton {"
+                "  border: none;"
+                "  background: #dc2626;"
+                "  text-align: center;"
+                "  padding: 10px 12px;"
+                "  font-size: 14px;"
+                "  font-weight: 700;"
+                "  color: #ffffff;"
+                "  border-radius: 10px;"
+                "}"
+                "QPushButton#overlayLogoutButton:hover {"
+                "  background: #b91c1c;"
+                "}"
+            );
+            connect(logoutBtn, &QPushButton::clicked, this, [this]() {
+                handleLogout();
+                navOverlayOpen = false;
+                if (navRailButton) {
+                    navRailButton->setText(QStringLiteral("☰"));
+                }
+                setNavigationCollapsed(true, false);
+            });
+            bottomLayout->addWidget(logoutBtn);
+
+            railLayout->addWidget(bottomBox);
         }
     }
 
@@ -3869,6 +4030,9 @@ void MainWindow::setupNavigationMenu() {
 void MainWindow::setNavigationCollapsed(const bool collapsed, const bool pinned) {
     navCollapsed = collapsed;
     navPinned = pinned;
+    if (!collapsed) {
+        navOverlayOpen = false;
+    }
 
     if (navigationList) {
         if (!collapsed) {
@@ -3883,14 +4047,27 @@ void MainWindow::setNavigationCollapsed(const bool collapsed, const bool pinned)
         }
         navigationList->setProperty("navCollapsed", collapsed);
     }
+    if (navigationPanel) {
+        navigationPanel->setVisible(!collapsed);
+        if (!collapsed) {
+            navigationPanel->setMinimumWidth(navExpandedWidth);
+            navigationPanel->setMaximumWidth(QWIDGETSIZE_MAX);
+        } else {
+            navigationPanel->setMinimumWidth(0);
+            navigationPanel->setMaximumWidth(QWIDGETSIZE_MAX);
+        }
+    }
 
     if (navRail) {
-        navRail->setVisible(collapsed);
-        navRail->raise();
+        navRail->setVisible(collapsed && (navPinned || navOverlayOpen));
+        if (navRail->isVisible()) {
+            navRail->raise();
+        }
     }
 
     if (navRailButton) {
-        navRailButton->setVisible(collapsed);
+        navRailButton->setVisible(true);
+        navRailButton->setText(navOverlayOpen ? QStringLiteral("✕") : QStringLiteral("☰"));
         navRailButton->raise();
     }
 
@@ -3899,20 +4076,24 @@ void MainWindow::setNavigationCollapsed(const bool collapsed, const bool pinned)
 }
 
 void MainWindow::repositionNavRailButton() const {
-    if (!navigationList) return;
+    const int margin = 12;
+    const QPoint anchor = centralWidget() ? centralWidget()->mapTo(this, QPoint(0, 0)) : QPoint(0, 0);
+    QSize navSize = QSize(navCollapsedWidth, centralWidget() ? centralWidget()->height() : height());
 
-    const QPoint topLeft = navigationList->mapTo(this, QPoint(0, 0));
-    const QSize navSize = navigationList->size();
-
-    if (navRail) {
-        navRail->setGeometry(QRect(topLeft, navSize));
+    if (navRail && navRail->isVisible()) {
+        if (navSize.width() <= 0) {
+            navSize.setWidth(navCollapsedWidth);
+        }
+        if (navSize.height() <= 0) {
+            navSize.setHeight(height());
+        }
+        navRail->setGeometry(QRect(anchor + QPoint(margin, margin), QSize(navSize.width(), navSize.height() - 2 * margin)));
         navRail->raise();
     }
 
     if (navRailButton) {
-        const int railWidth = navRail ? navRail->width() : navSize.width();
-        const int buttonX = topLeft.x() + max(8, railWidth / 2 - navRailButton->width() / 2);
-        const int buttonY = topLeft.y() + 8;
+        const int buttonX = anchor.x() + margin;
+        const int buttonY = anchor.y() + margin;
         navRailButton->move(buttonX, buttonY);
         navRailButton->raise();
     }

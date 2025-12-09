@@ -151,9 +151,9 @@ void StatsWidget::setupUi() {
     monthlyLayout->addWidget(monthlyLabel);
 
     monthlyChart = new StatsChart(monthlyPanel);
-    monthlyChart->setMode(StatsChart::Mode::Line);
+    monthlyChart->setMode(StatsChart::Mode::Bar);
     monthlyChart->setShowLegend(false);
-    monthlyChart->setAxisLabels(tr("Tháng"), tr("Sách"));
+    monthlyChart->setAxisLabels(tr("Thời gian"), tr("Sách"));
     monthlyChart->setMinimumHeight(300);
     monthlyLayout->addWidget(monthlyChart);
     bottomRow->addWidget(monthlyPanel, 7);
@@ -385,7 +385,7 @@ void StatsWidget::updateMonthlyChart(const core::DynamicArray<int> &monthlyBorro
     seriesVec.append(series);
     monthlyChart->setCategories(categories);
     monthlyChart->setSeries(seriesVec);
-    monthlyChart->setMode(StatsChart::Mode::Line);
+    monthlyChart->setMode(StatsChart::Mode::Bar);
     monthlyChart->setShowLegend(false);
 }
 

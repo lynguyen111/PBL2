@@ -149,6 +149,7 @@ private:
     QListWidget *reportsList{nullptr};
     QListWidget *accountsList{nullptr};
     QListWidget *navigationList{nullptr};
+    QWidget *navigationPanel{nullptr};
     QPushButton *refreshButton{nullptr};
     QLabel *statisticsSummaryLabel{nullptr};
     QWidget *navRail{nullptr};
@@ -177,9 +178,10 @@ private:
         void refreshSimpleStats();
     bool navCollapsed{false};
     bool navPinned{false};
+    bool navOverlayOpen{false};
     // Preferred widths (pixels) for collapsed and expanded navigation
-    int navCollapsedWidth{56};
-    int navExpandedWidth{220};
+    int navCollapsedWidth{280};
+    int navExpandedWidth{240};
     // NavMode removed: simple show/hide behavior requested by user
     // NavMode navMode{NavMode::On};
 
