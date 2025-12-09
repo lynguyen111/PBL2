@@ -256,6 +256,24 @@ void StatsChart::drawBarChart(QPainter &painter, const QRect &plotArea) const {
             painter.fillRect(bar, QBrush(gradient));
             painter.setPen(QPen(baseColor.darker(140), 1));
             painter.drawRect(bar);
+
+            // Value label on top of each bar
+            QFont valueFont = painter.font();
+            valueFont.setBold(true);
+            valueFont.setPointSize(qMax(8, valueFont.pointSize() - 1));
+            painter.setFont(valueFont);
+            if (value > 0.0) {
+                painter.setPen(QColor(17, 24, 39));
+                const QString valueText = qFuzzyIsNull(value - std::floor(value))
+                                              ? QString::number(static_cast<int>(value))
+                                              : QString::number(value, 'f', 1);
+                const QRectF labelRect(bar.left() - 4, bar.top() - 22, bar.width() + 8, 18);
+                // Slight shadow to stand out on light backgrounds
+                painter.setPen(QPen(QColor(255, 255, 255, 180), 2));
+                painter.drawText(labelRect, Qt::AlignHCenter | Qt::AlignVCenter, valueText);
+                painter.setPen(QColor(17, 24, 39));
+                painter.drawText(labelRect, Qt::AlignHCenter | Qt::AlignVCenter, valueText);
+            }
         }
 
         painter.setPen(QColor(0x2C, 0x3E, 0x59));
