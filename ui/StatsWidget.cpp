@@ -203,8 +203,9 @@ QFrame *StatsWidget::createMetricCard(const QString &iconPath, const QColor &acc
     applyShadow(card, 20.0, QPointF(0, 5));
 
     auto *layout = new QHBoxLayout(card);
-    layout->setContentsMargins(14, 12, 14, 12);
-    layout->setSpacing(12);
+    layout->setContentsMargins(18, 16, 18, 16);
+    layout->setSpacing(14);
+    layout->setAlignment(Qt::AlignVCenter);
 
     auto *iconWrap = new QLabel(card);
     iconWrap->setFixedSize(52, 52);
@@ -217,7 +218,8 @@ QFrame *StatsWidget::createMetricCard(const QString &iconPath, const QColor &acc
     layout->addWidget(iconWrap);
 
     auto *textCol = new QVBoxLayout();
-    textCol->setSpacing(2);
+    textCol->setSpacing(4);
+    textCol->setAlignment(Qt::AlignVCenter);
 
     valueLabel = new QLabel(QStringLiteral("0"), card);
     QFont valueFont = valueLabel->font();

@@ -203,9 +203,13 @@ double StatsChart::findMaxValue() const {
             maxVal = qMax(maxVal, v);
         }
     }
-    if (qFuzzyIsNull(maxVal)) return 5.0;
-    // Luôn có tối thiểu 0..5 trên trục để thấy các mốc 1..5 ngay cả khi dữ liệu nhỏ.
-    return static_cast<double>(qMax(5, static_cast<int>(std::ceil(maxVal))));
+    // Giữ mốc trục Oy ở số chẵn (2,4,6,...) để dễ đọc, kể cả khi dữ liệu nhỏ.
+    constexpr int tickCount = 4;
+    const double normalizedMax = qMax(maxVal, 1.0);
+    int tickStep = static_cast<int>(std::ceil(normalizedMax / tickCount));
+    if (tickStep < 2) tickStep = 2;
+    if (tickStep % 2 != 0) ++tickStep;
+    return static_cast<double>(tickStep * tickCount);
 }
 
 void StatsChart::drawBarChart(QPainter &painter, const QRect &plotArea) const {

@@ -1,6 +1,7 @@
 #include "QtBridge.h"
 
 #include <QByteArray>
+#include <QDate>
 #include <QDateTime>
 #include <QTimeZone>
 #include <QString>
@@ -23,9 +24,17 @@ namespace pbl2::bridge {
         return {value.year(), value.month(), value.day()};
     }
 
+    core::Date currentCoreDate() {
+        return toCoreDate(QDate::currentDate());
+    }
+
     QDate toQDate(const core::Date &value) {
         if (!value.isValid()) return {};
         return {value.year(), value.month(), value.day()};
+    }
+
+    QDate currentDate() {
+        return toQDate(currentCoreDate());
     }
 
     core::DateTime toCoreDateTime(const QDateTime &value) {
@@ -47,6 +56,14 @@ namespace pbl2::bridge {
         const QDate date(value.year(), value.month(), value.day());
         const QTime time(value.hour(), value.minute(), value.second(), value.millisecond());
         return {date, time, QTimeZone::utc()};
+    }
+
+    core::DateTime currentCoreDateTime() {
+        return toCoreDateTime(QDateTime::currentDateTime());
+    }
+
+    QDateTime currentDateTime() {
+        return toQDateTime(currentCoreDateTime());
     }
 
 }

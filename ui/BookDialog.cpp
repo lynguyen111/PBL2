@@ -164,9 +164,9 @@ void BookDialog::setBook(const model::Book &book, const bool editing) {
     publisherEdit->setText(bridge::toQString(book.getPublisher()));
     if (editing) {
         const QDate date = bridge::toQDate(book.getPublishDate());
-        publishDateEdit->setDate(date.isValid() ? date : QDate::currentDate());
+        publishDateEdit->setDate(date.isValid() ? date : bridge::currentDate());
     } else {
-        publishDateEdit->setDate(QDate::currentDate());
+        publishDateEdit->setDate(bridge::currentDate());
     }
     quantitySpin->setValue(book.getQuantity());
     originalPriceSpin->setValue(book.getOriginalPrice());
@@ -222,7 +222,7 @@ void BookDialog::presetId(const QString &id, const bool lockField) {
     forceIdReadOnly = lockField;
     idEdit->setText(cleanId(id));
     idEdit->setReadOnly(editingMode || forceIdReadOnly);
-    publishDateEdit->setDate(QDate::currentDate()); // Đảm bảo ngày phát hành là hôm nay khi thêm mới
+    publishDateEdit->setDate(bridge::currentDate()); // Đảm bảo ngày phát hành là hôm nay khi thêm mới
 }
 
 model::Book BookDialog::book() const {

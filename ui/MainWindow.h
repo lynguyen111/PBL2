@@ -222,7 +222,7 @@ private:
 
     QComboBox *timePeriodCombo{nullptr};
     QComboBox *genreFilterCombo{nullptr};
-    QString statsSelectedGenre;
+    core::CustomString statsSelectedGenre;
     QTableWidget *loanStatsTable{nullptr};
     QPushButton *applyFilterButton{nullptr};
     

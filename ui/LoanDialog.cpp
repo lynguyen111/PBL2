@@ -78,12 +78,12 @@ namespace pbl2::ui {
         borrowDateEdit = new QDateEdit(this);
         borrowDateEdit->setCalendarPopup(true);
         borrowDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-        borrowDateEdit->setDate(QDate::currentDate());
+        borrowDateEdit->setDate(bridge::currentDate());
 
         dueDateEdit = new QDateEdit(this);
         dueDateEdit->setCalendarPopup(true);
         dueDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-        dueDateEdit->setDate(QDate::currentDate().addDays(maxBorrowDays > 0 ? maxBorrowDays : 14));
+        dueDateEdit->setDate(bridge::currentDate().addDays(maxBorrowDays > 0 ? maxBorrowDays : 14));
 
         errorLabel = new QLabel(this);
         errorLabel->setAlignment(Qt::AlignCenter);

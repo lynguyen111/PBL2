@@ -72,11 +72,11 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     dobEdit = new QDateEdit(this);
     dobEdit->setCalendarPopup(true);
     dobEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-    dobEdit->setDate(QDate::currentDate());
+    dobEdit->setDate(bridge::currentDate());
     hireDateEdit = new QDateEdit(this);
     hireDateEdit->setCalendarPopup(true);
     hireDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-    hireDateEdit->setDate(QDate::currentDate());
+    hireDateEdit->setDate(bridge::currentDate());
 
     activeCheck = new QCheckBox(tr("Đang hoạt động"), this);
     activeCheck->setChecked(true);
@@ -150,12 +150,12 @@ void StaffDialog::setStaff(const model::Staff &staff, bool editing) {
     if (staff.getDob().isValid()) {
         dobEdit->setDate(bridge::toQDate(staff.getDob()));
     } else {
-        dobEdit->setDate(QDate::currentDate());
+        dobEdit->setDate(bridge::currentDate());
     }
     if (staff.getHireDate().isValid()) {
         hireDateEdit->setDate(bridge::toQDate(staff.getHireDate()));
     } else {
-        hireDateEdit->setDate(QDate::currentDate());
+        hireDateEdit->setDate(bridge::currentDate());
     }
     activeFlag = staff.isActive();
     activeCheck->setChecked(activeFlag);

@@ -17,27 +17,30 @@
 
 #include "QtBridge.h"
 #include "../core/DynamicArray.h"
+#include "../core/Map.h"
+
+using namespace pbl2;
 
 using namespace std;
 
 namespace {
 
-QString generateRequestId(const QString &staff) {
+QString generateRequestId(const core::CustomString &staff) {
     return QStringLiteral("REQ-%1-%2")
-        .arg(staff.toUpper(), QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMddhhmmss")));
+        .arg(pbl2::bridge::toQString(staff.trimmed().toUpper()),
+             pbl2::bridge::currentDateTime().toString(QStringLiteral("yyyyMMddhhmmss")));
 }
 
 }
 
 namespace pbl2::ui {
 
-    ReportRequestDialog::ReportRequestDialog(const QString &staffUsername,
+    ReportRequestDialog::ReportRequestDialog(const core::CustomString &staffUsername,
                                              const core::DynamicArray<core::CustomString> &knownBookIds,
                                              QWidget *parent)
         : QDialog(parent), staffUsername(staffUsername), knownBookIds(knownBookIds) {
         for (auto &id : this->knownBookIds) {
-            const QString upper = bridge::toQString(id).trimmed().toUpper();
-            id = bridge::toCustomString(upper);
+            id = id.trimmed().toUpper();
         }
         setWindowTitle(tr("Lập báo cáo tổng hợp"));
         setModal(true);
@@ -78,13 +81,13 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         fromDateEdit = new QDateEdit(this);
         fromDateEdit->setCalendarPopup(true);
         fromDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-        fromDateEdit->setDate(QDate::currentDate().addDays(-7));
+        fromDateEdit->setDate(bridge::currentDate().addDays(-7));
         connect(fromDateEdit, &QDateEdit::dateChanged, this, [this]() { refreshAutoFields(); });
 
         toDateEdit = new QDateEdit(this);
         toDateEdit->setCalendarPopup(true);
         toDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-        toDateEdit->setDate(QDate::currentDate());
+        toDateEdit->setDate(bridge::currentDate());
         connect(toDateEdit, &QDateEdit::dateChanged, this, [this]() { refreshAutoFields(); });
 
         handledSpin = new QSpinBox(this);
@@ -162,10 +165,10 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         return tokens;
     }
 
-    bool ReportRequestDialog::isKnownBookId(const QString &idUpper) const {
+    bool ReportRequestDialog::isKnownBookId(const core::CustomString &idUpper) const {
         if (knownBookIds.isEmpty()) return true;
         for (const auto &id : knownBookIds) {
-            if (bridge::toQString(id).compare(idUpper, Qt::CaseInsensitive) == 0) {
+            if (id.compare(idUpper, core::CaseSensitivity::Insensitive) == 0) {
                 return true;
             }
         }
@@ -198,14 +201,15 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
             }
 
             const QString canonicalId = id.toUpper();
-            if (!isKnownBookId(canonicalId)) {
+            const core::CustomString canonicalUpper = bridge::toCustomString(canonicalId);
+            if (!isKnownBookId(canonicalUpper)) {
                 if (errors) errors->append(tr("Mã sách \"%1\" không tồn tại.").arg(id));
                 continue;
             }
 
             int existingIndex = -1;
             for (int i = 0; i < aggregated.size(); ++i) {
-                if (aggregated[i].id.compare(canonicalId, Qt::CaseInsensitive) == 0) {
+                if (aggregated[i].id.compare(canonicalUpper, core::CaseSensitivity::Insensitive) == 0) {
                     existingIndex = i;
                     break;
                 }
@@ -214,7 +218,7 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
                 aggregated[existingIndex].count += count;
             } else {
                 AffectedBookEntry entry;
-                entry.id = canonicalId;
+                entry.id = canonicalUpper;
                 entry.count = count;
                 aggregated.append(entry);
             }
@@ -276,13 +280,13 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         for (int i = 0; i < affected.size(); ++i) {
             const auto &entry = affected[i];
             if (!serialized.isEmpty()) serialized.append(';');
-            serialized.append(QStringLiteral("%1:%2").arg(entry.id, QString::number(entry.count)));
+            serialized.append(QStringLiteral("%1:%2").arg(bridge::toQString(entry.id), QString::number(entry.count)));
             totalLost += entry.count;
         }
 
         model::ReportRequest req;
         req.setRequestId(bridge::toCustomString(requestIdEdit->text().trimmed()));
-        req.setStaffUsername(bridge::toCustomString(staffUsername));
+        req.setStaffUsername(staffUsername);
         req.setFromDate(bridge::toCoreDate(fromDateEdit->date()));
         req.setToDate(bridge::toCoreDate(toDateEdit->date()));
         req.setHandledLoans(handledSpin->value());
@@ -306,23 +310,25 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
 
         const QDate from = fromDateEdit->date();
         const QDate to = toDateEdit->date();
-        const QDate today = QDate::currentDate();
+        const QDate today = bridge::currentDate();
 
         auto normalize = [](const core::CustomString &text) {
-            return bridge::toQString(text).trimmed().toUpper();
+            return text.trimmed().toUpper();
         };
 
         int handledCount = 0;
-        QSet<QString> overdueReaders;
-        QMap<QString, int> lostByBook;
+        core::Map<core::CustomString, bool> overdueReaders;
+        core::Map<core::CustomString, int> lostByBook;
 
         for (const auto &loan : loansData) {
             const QDate borrowDate = loan.getBorrowDate().isValid() ? bridge::toQDate(loan.getBorrowDate()) : QDate();
             if (!borrowDate.isValid() || borrowDate < from || borrowDate > to) continue;
 
-            const QString status = normalize(loan.getStatus());
-            const bool isBorrowed = status == QStringLiteral("BORROWED");
-            const bool isLostOrDamaged = status == QStringLiteral("LOST") || status == QStringLiteral("DAMAGED");
+            const core::CustomString status = normalize(loan.getStatus());
+            const bool isBorrowed = status.compare(core::CustomStringLiteral("BORROWED"), core::CaseSensitivity::Insensitive) == 0;
+            const bool isLostOrDamaged =
+                status.compare(core::CustomStringLiteral("LOST"), core::CaseSensitivity::Insensitive) == 0 ||
+                status.compare(core::CustomStringLiteral("DAMAGED"), core::CaseSensitivity::Insensitive) == 0;
             if (!isBorrowed && !isLostOrDamaged) continue;
 
             if (isBorrowed) {
@@ -330,17 +336,17 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
             }
 
             if (isLostOrDamaged) {
-                const QString bookId = bridge::toQString(loan.getBookId()).trimmed().toUpper();
+                const core::CustomString bookId = loan.getBookId().trimmed().toUpper();
                 if (!bookId.isEmpty()) {
-                    lostByBook[bookId] += 1;
+                    lostByBook[bookId] = lostByBook.value(bookId, 0) + 1;
                 }
             }
 
             const QDate dueDate = loan.getDueDate().isValid() ? bridge::toQDate(loan.getDueDate()) : QDate();
             const bool hasReturn = loan.getReturnDate().isValid();
             if (isBorrowed && !hasReturn && dueDate.isValid() && today > dueDate) {
-                const QString readerId = bridge::toQString(loan.getReaderId()).trimmed().toUpper();
-                if (!readerId.isEmpty()) overdueReaders.insert(readerId);
+                const core::CustomString readerId = loan.getReaderId().trimmed().toUpper();
+                if (!readerId.isEmpty()) overdueReaders[readerId] = true;
             }
         }
 
@@ -351,8 +357,8 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         if (!userEditedAffected && affectedBooksEdit) {
             QStringList entries;
             int totalLost = 0;
-            for (auto it = lostByBook.cbegin(); it != lostByBook.cend(); ++it) {
-                entries.append(QStringLiteral("%1:%2").arg(it.key(), QString::number(it.value())));
+            for (auto it = lostByBook.constBegin(); it != lostByBook.constEnd(); ++it) {
+                entries.append(QStringLiteral("%1:%2").arg(bridge::toQString(it.key()), QString::number(it.value())));
                 totalLost += it.value();
             }
             const QSignalBlocker blocker(affectedBooksEdit);

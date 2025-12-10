@@ -4,6 +4,7 @@
 #include <QString>
 
 #include "../core/CustomString.h"
+#include "../core/CaseSensitivity.h"
 #include "../core/DynamicArray.h"
 #include "model/Loan.h"
 #include "model/ReportRequest.h"
@@ -21,7 +22,7 @@ class ReportRequestDialog final : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ReportRequestDialog(const QString &staffUsername,
+    explicit ReportRequestDialog(const core::CustomString &staffUsername,
                                  const core::DynamicArray<core::CustomString> &knownBookIds,
                                  QWidget *parent = nullptr);
 
@@ -33,19 +34,19 @@ protected:
 
 private:
     struct AffectedBookEntry {
-        QString id;
+        core::CustomString id;
         int count{0};
     };
 
     [[nodiscard]] core::DynamicArray<AffectedBookEntry> parseAffectedBooks(core::DynamicArray<QString> *errors = nullptr) const;
     [[nodiscard]] core::DynamicArray<QString> splitTokens(const QString &normalized) const;
-    [[nodiscard]] bool isKnownBookId(const QString &idUpper) const;
+    [[nodiscard]] bool isKnownBookId(const core::CustomString &idUpper) const;
     void refreshAffectedCountPreview() const;
     void refreshAutoFields();
     [[nodiscard]] bool validateInputs() const;
     void showError(const QString &message) const;
 
-    QString staffUsername;
+    core::CustomString staffUsername;
     core::DynamicArray<core::CustomString> knownBookIds;
     core::DynamicArray<model::Loan> loansData;
     bool userEditedAffected{false};

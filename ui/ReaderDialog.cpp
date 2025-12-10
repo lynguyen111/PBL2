@@ -51,15 +51,15 @@ ReaderDialog::ReaderDialog(QWidget *parent) : QDialog(parent) {
     dobEdit = new QDateEdit(this);
     dobEdit->setCalendarPopup(true);
     dobEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-    dobEdit->setDate(QDate::currentDate());
+    dobEdit->setDate(bridge::currentDate());
     createdDateEdit = new QDateEdit(this);
     createdDateEdit->setCalendarPopup(true);
     createdDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-    createdDateEdit->setDate(QDate::currentDate());
+    createdDateEdit->setDate(bridge::currentDate());
     expiryDateEdit = new QDateEdit(this);
     expiryDateEdit->setCalendarPopup(true);
     expiryDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-    expiryDateEdit->setDate(QDate::currentDate());
+    expiryDateEdit->setDate(bridge::currentDate());
     totalBorrowedSpin = new QSpinBox(this);
     totalBorrowedSpin->setRange(0, 100000);
     activeCheck = new QCheckBox(tr("Đang hoạt động"), this);
@@ -128,17 +128,17 @@ void ReaderDialog::setReader(const model::Reader &reader, const bool editing) {
     if (reader.getDob().isValid()) {
         dobEdit->setDate(bridge::toQDate(reader.getDob()));
     } else {
-        dobEdit->setDate(QDate::currentDate());
+        dobEdit->setDate(bridge::currentDate());
     }
     if (reader.getCreatedDate().isValid()) {
         createdDateEdit->setDate(bridge::toQDate(reader.getCreatedDate()));
     } else {
-        createdDateEdit->setDate(QDate::currentDate());
+        createdDateEdit->setDate(bridge::currentDate());
     }
     if (reader.getExpiryDate().isValid()) {
         expiryDateEdit->setDate(bridge::toQDate(reader.getExpiryDate()));
     } else {
-        expiryDateEdit->setDate(QDate::currentDate());
+        expiryDateEdit->setDate(bridge::currentDate());
     }
     totalBorrowedSpin->setValue(reader.getTotalBorrowed());
     activeFlag = reader.isActive();

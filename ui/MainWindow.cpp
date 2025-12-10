@@ -668,11 +668,61 @@ QString normalizedStatus(const core::CustomString &text) {
     return normalizedStatus(toQString(text));
 }
 
-bool containsAllTokens(const QString &haystackLower, const QString &termLower) {
-    if (termLower.isEmpty()) return true;
-    const auto tokens = termLower.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+QChar stripVietnameseAccent(const QChar ch) {
+    switch (ch.unicode()) {
+    case u'á': case u'à': case u'ả': case u'ã': case u'ạ':
+    case u'ă': case u'ắ': case u'ằ': case u'ẳ': case u'ẵ': case u'ặ':
+    case u'â': case u'ấ': case u'ầ': case u'ẩ': case u'ẫ': case u'ậ':
+    case u'Á': case u'À': case u'Ả': case u'Ã': case u'Ạ':
+    case u'Ă': case u'Ắ': case u'Ằ': case u'Ẳ': case u'Ẵ': case u'Ặ':
+    case u'Â': case u'Ấ': case u'Ầ': case u'Ẩ': case u'Ẫ': case u'Ậ':
+        return u'a';
+    case u'é': case u'è': case u'ẻ': case u'ẽ': case u'ẹ':
+    case u'ê': case u'ế': case u'ề': case u'ể': case u'ễ': case u'ệ':
+    case u'É': case u'È': case u'Ẻ': case u'Ẽ': case u'Ẹ':
+    case u'Ê': case u'Ế': case u'Ề': case u'Ể': case u'Ễ': case u'Ệ':
+        return u'e';
+    case u'í': case u'ì': case u'ỉ': case u'ĩ': case u'ị':
+    case u'Í': case u'Ì': case u'Ỉ': case u'Ĩ': case u'Ị':
+        return u'i';
+    case u'ó': case u'ò': case u'ỏ': case u'õ': case u'ọ':
+    case u'ô': case u'ố': case u'ồ': case u'ổ': case u'ỗ': case u'ộ':
+    case u'ơ': case u'ớ': case u'ờ': case u'ở': case u'ỡ': case u'ợ':
+    case u'Ó': case u'Ò': case u'Ỏ': case u'Õ': case u'Ọ':
+    case u'Ô': case u'Ố': case u'Ồ': case u'Ổ': case u'Ỗ': case u'Ộ':
+    case u'Ơ': case u'Ớ': case u'Ờ': case u'Ở': case u'Ỡ': case u'Ợ':
+        return u'o';
+    case u'ú': case u'ù': case u'ủ': case u'ũ': case u'ụ':
+    case u'ư': case u'ứ': case u'ừ': case u'ử': case u'ữ': case u'ự':
+    case u'Ú': case u'Ù': case u'Ủ': case u'Ũ': case u'Ụ':
+    case u'Ư': case u'Ứ': case u'Ừ': case u'Ử': case u'Ữ': case u'Ự':
+        return u'u';
+    case u'ý': case u'ỳ': case u'ỷ': case u'ỹ': case u'ỵ':
+    case u'Ý': case u'Ỳ': case u'Ỷ': case u'Ỹ': case u'Ỵ':
+        return u'y';
+    case u'đ': case u'Đ':
+        return u'd';
+    default:
+        return ch.toLower();
+    }
+}
+
+QString normalizeSearchText(const QString &text) {
+    QString out;
+    out.reserve(text.size());
+    for (const QChar ch : text) {
+        out.append(stripVietnameseAccent(ch));
+    }
+    return out;
+}
+
+bool containsAllTokens(const QString &haystackRaw, const QString &termRaw) {
+    const QString haystack = normalizeSearchText(haystackRaw);
+    const QString term = normalizeSearchText(termRaw);
+    if (term.isEmpty()) return true;
+    const auto tokens = term.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
     for (const auto &tok : tokens) {
-        if (!haystackLower.contains(tok)) return false;
+        if (!haystack.contains(tok)) return false;
     }
     return true;
 }
@@ -1287,14 +1337,14 @@ void MainWindow::configureReportsTab() {
         reportFromFilter->setCalendarPopup(true);
         reportFromFilter->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
         reportFromFilter->setDateRange(QDate(2000, 1, 1), QDate(7999, 12, 31));
-        reportFromFilter->setDate(QDate::currentDate());
+        reportFromFilter->setDate(currentDate());
         connect(reportFromFilter, &QDateEdit::dateChanged, this, &MainWindow::applyReportFilter);
     }
     if (reportToFilter) {
         reportToFilter->setCalendarPopup(true);
         reportToFilter->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
         reportToFilter->setDateRange(QDate(2000, 1, 1), QDate(7999, 12, 31));
-        reportToFilter->setDate(QDate::currentDate());
+        reportToFilter->setDate(currentDate());
         connect(reportToFilter, &QDateEdit::dateChanged, this, &MainWindow::applyReportFilter);
     }
 
@@ -1368,7 +1418,7 @@ void MainWindow::configureStatsTab() {
     const auto customStartDateEdit = searchWidget->findChild<QDateEdit *>(QStringLiteral("customStartDateEdit"));
     const auto customEndDateEdit = searchWidget->findChild<QDateEdit *>(QStringLiteral("customEndDateEdit"));
     if (customStartDateEdit && customEndDateEdit) {
-        const QDate today = QDate::currentDate();
+        const QDate today = currentDate();
         customStartDateEdit->setDate(today);
         customEndDateEdit->setDate(today);
         customStartDateEdit->setVisible(false);
@@ -1395,7 +1445,7 @@ void MainWindow::configureStatsTab() {
         connect(applyFilterButton, &QPushButton::clicked, this, &MainWindow::applyStatsFilter);
     }
 
-    const QDate today = QDate::currentDate();
+    const QDate today = currentDate();
     statsStartDate = today;
     statsEndDate = today;
 
@@ -1918,7 +1968,7 @@ void MainWindow::fillLoansList(const core::DynamicArray<model::Loan> &loans) {
         QString extraDetail;
         if (statusCode == QStringLiteral("OVERDUE")) {
             if (const QDate due = loan.getDueDate().isValid() ? toQDate(loan.getDueDate()) : QDate(); due.isValid()) {
-                const int daysLate = max(0, static_cast<int>(due.daysTo(QDate::currentDate())));
+                const int daysLate = max(0, static_cast<int>(due.daysTo(currentDate())));
                 extraDetail = daysLate > 0
                                   ? tr("Quá hạn: %1 ngày").arg(daysLate)
                                   : tr("Quá hạn");
@@ -2308,7 +2358,7 @@ void MainWindow::refreshSimpleStats() {
 void MainWindow::updateStatsCards() {
     if (!statsWidget) return;
 
-    const QDate today = QDate::currentDate();
+    const QDate today = currentDate();
     const auto monthStart = QDate(today.year(), today.month(), 1);
 
     const int totalBooks = booksCache.size();
@@ -2344,7 +2394,7 @@ void MainWindow::updateStatsCharts() {
 void MainWindow::updateStatsDashboardWidget() {
     if (!statsWidget) return;
 
-    const QDate today = QDate::currentDate();
+    const QDate today = currentDate();
     const int totalBooks = booksCache.size();
     const int totalReaders = readersCache.size();
     const int totalLoans = loansCache.size();
@@ -2456,16 +2506,16 @@ void MainWindow::updateStatsDashboardWidget() {
 }
 
 void MainWindow::applyStatsFilter() {
-    const QDate today = QDate::currentDate();
+    const QDate today = currentDate();
     // Get selected time period
     const QString timePeriod = timePeriodCombo ? timePeriodCombo->currentText() : QStringLiteral("Hôm nay");
     // Get selected genre if available
-    QString selectedGenre;
+    core::CustomString selectedGenre;
     if (!genreFilterCombo) {
         const QWidget *searchWidget = ui->statsTab;
         genreFilterCombo = searchWidget->findChild<QComboBox *>(QStringLiteral("genreFilterCombo"));
     }
-    if (genreFilterCombo) selectedGenre = genreFilterCombo->currentText();
+    if (genreFilterCombo) selectedGenre = toCustomString(genreFilterCombo->currentText());
     // Store for chart update
     this->statsSelectedGenre = selectedGenre;
     // Calculate date range
@@ -3231,7 +3281,7 @@ void MainWindow::handleMarkReturned() {
         return;
     }
 
-    const QDate returnDate = QDate::currentDate();
+    const QDate returnDate = currentDate();
     const auto dueDate = toQDate(loanOpt->getDueDate());
     const qint64 overdueSpan = dueDate.daysTo(returnDate);
     const int lateDays = overdueSpan > 0 ? static_cast<int>(overdueSpan) : 0;
@@ -3427,7 +3477,7 @@ void MainWindow::handleLossOrDamage(const QString &status) {
         reason = tr("Không có ghi chú bổ sung");
     }
 
-    const QDate today = QDate::currentDate();
+    const QDate today = currentDate();
     int fee = 0;
     if (status == QStringLiteral("LOST")) {
         // Tiền đền bù mất sách = giá gốc * 2 + tiền trễ (nếu có)
@@ -3470,11 +3520,11 @@ void MainWindow::handleLossOrDamage(const QString &status) {
     model::ReportRequest req;
     const QString prefix = status == QStringLiteral("LOST") ? QStringLiteral("MẤT") : QStringLiteral("HƯ");
     const QString requestId = QStringLiteral("%1-%2")
-                                  .arg(prefix, QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMddhhmmss")));
+                                  .arg(prefix, currentDateTime().toString(QStringLiteral("yyyyMMddhhmmss")));
     req.setRequestId(toCustomString(requestId));
     req.setStaffUsername(currentAccount.getUsername());
-    req.setFromDate(toCoreDate(QDate::currentDate()));
-    req.setToDate(toCoreDate(QDate::currentDate()));
+    req.setFromDate(toCoreDate(currentDate()));
+    req.setToDate(toCoreDate(currentDate()));
     req.setHandledLoans(1);
     req.setLostOrDamaged(1);
     req.setOverdueReaders(0);
@@ -3488,7 +3538,7 @@ void MainWindow::handleLossOrDamage(const QString &status) {
             .arg(statusLabel, loanId, reason)
             .arg(fee)));
     req.setStatus(core::CustomStringLiteral("PENDING"));
-    req.setCreatedAt(toCoreDateTime(QDateTime::currentDateTime()));
+    req.setCreatedAt(toCoreDateTime(currentDateTime()));
     if (!reportService.submitRequest(req)) {
         showWarningDialog(tr("Cảnh báo"), tr("Không thể ghi nhận báo cáo."));
     }
@@ -3653,7 +3703,7 @@ void MainWindow::handleSubmitReport() {
     for (const auto &book : booksCache) {
         bookIds.append(book.getId());
     }
-    ReportRequestDialog dialog(toQString(currentAccount.getUsername()), bookIds, this);
+    ReportRequestDialog dialog(currentAccount.getUsername(), bookIds, this);
     dialog.setLoansData(loansCache);
     if (dialog.exec() != QDialog::Accepted) return;
     if (!reportService.submitRequest(dialog.reportRequest())) {
