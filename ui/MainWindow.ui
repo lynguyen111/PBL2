@@ -317,16 +317,23 @@
               <widget class="QComboBox" name="bookStatusFilter"/>
              </item>
              <item>
-              <widget class="QPushButton" name="bookFilterButton">
-               <property name="text">
-                <string>Lọc</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
+             <widget class="QPushButton" name="bookFilterButton">
+              <property name="text">
+               <string>Lọc</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bookClearButton">
+              <property name="text">
+               <string>Xóa lọc</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
         </item>
         <item>
          <widget class="QListWidget" name="booksList"/>
@@ -462,6 +469,13 @@
             <widget class="QPushButton" name="readerFilterButton">
              <property name="text">
               <string>Lọc</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="readerClearButton">
+             <property name="text">
+              <string>Xóa lọc</string>
              </property>
             </widget>
            </item>
@@ -602,6 +616,13 @@
             <widget class="QPushButton" name="loanFilterButton">
              <property name="text">
               <string>Lọc</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QPushButton" name="loanClearButton">
+             <property name="text">
+              <string>Xóa lọc</string>
              </property>
             </widget>
            </item>
@@ -1079,6 +1100,13 @@ QGroupBox#statsFilterGroup::title {
             <widget class="QPushButton" name="staffFilterButton">
              <property name="text">
               <string>Lọc</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="staffClearButton">
+             <property name="text">
+              <string>Xóa lọc</string>
              </property>
             </widget>
            </item>

@@ -1098,6 +1098,9 @@ void MainWindow::configureBooksTab() {
     if (ui->bookFilterButton) {
         connect(ui->bookFilterButton, &QPushButton::clicked, [this]() { applyBookFilter(); });
     }
+    if (ui->bookClearButton) {
+        connect(ui->bookClearButton, &QPushButton::clicked, this, &MainWindow::clearBookFilter);
+    }
 
     if (ui->addBookButton) {
         ui->addBookButton->setVisible(adminRole);
@@ -1170,6 +1173,9 @@ void MainWindow::configureReadersTab() {
     if (ui->readerFilterButton) {
         connect(ui->readerFilterButton, &QPushButton::clicked, [this]() { applyReaderFilter(); });
     }
+    if (ui->readerClearButton) {
+        connect(ui->readerClearButton, &QPushButton::clicked, this, &MainWindow::clearReaderFilter);
+    }
 
     if (ui->addReaderButton) {
         ui->addReaderButton->setVisible(staffRole);
@@ -1212,6 +1218,9 @@ void MainWindow::configureLoansTab() {
     }
     if (ui->loanFilterButton) {
         connect(ui->loanFilterButton, &QPushButton::clicked, [this]() { applyLoanFilter(); });
+    }
+    if (ui->loanClearButton) {
+        connect(ui->loanClearButton, &QPushButton::clicked, this, &MainWindow::clearLoanFilter);
     }
 
     if (ui->newLoanButton) {
@@ -1526,7 +1535,9 @@ void MainWindow::fillBooksList(const core::DynamicArray<model::Book> &books) {
         // Đặt icon là ảnh bìa nếu có
         if (!coverPath.isEmpty()) {
             QPixmap pix(coverPath);
-            item->setIcon(QIcon(pix.scaled(80, 110, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+            if (!pix.isNull()) {
+                item->setIcon(QIcon(pix.scaled(80, 110, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+            }
         }
         item->setTextAlignment(Qt::AlignCenter);
         QSize hint = item->sizeHint();
@@ -1720,6 +1731,12 @@ void MainWindow::applyBookFilter() {
     fillBooksList(filtered);
 }
 
+void MainWindow::clearBookFilter() {
+    if (bookSearchEdit) bookSearchEdit->clear();
+    if (bookStatusFilter && bookStatusFilter->count() > 0) bookStatusFilter->setCurrentIndex(0);
+    applyBookFilter();
+}
+
 void MainWindow::populateReaders() {
     readersCache = readerService.fetchAll();
     applyReaderFilter();
@@ -1831,6 +1848,12 @@ void MainWindow::applyReaderFilter() {
         filtered.push_back(reader);
     }
     fillReadersList(filtered);
+}
+
+void MainWindow::clearReaderFilter() {
+    if (readerSearchEdit) readerSearchEdit->clear();
+    if (readerStatusFilter && readerStatusFilter->count() > 0) readerStatusFilter->setCurrentIndex(0);
+    applyReaderFilter();
 }
 
 void MainWindow::populateLoans() {
@@ -2000,6 +2023,12 @@ void MainWindow::applyLoanFilter() {
     }
     fillLoansList(filtered);
     updateLoanActionButtons();
+}
+
+void MainWindow::clearLoanFilter() {
+    if (loanSearchEdit) loanSearchEdit->clear();
+    if (loanStatusFilter && loanStatusFilter->count() > 0) loanStatusFilter->setCurrentIndex(0);
+    applyLoanFilter();
 }
 
 void MainWindow::updateLoanActionButtons() {
@@ -2565,6 +2594,9 @@ void MainWindow::configureStaffsTab() {
     if (ui->staffFilterButton) {
         connect(ui->staffFilterButton, &QPushButton::clicked, this, &MainWindow::applyStaffFilter);
     }
+    if (ui->staffClearButton) {
+        connect(ui->staffClearButton, &QPushButton::clicked, this, &MainWindow::clearStaffFilter);
+    }
 
     if (ui->addStaffButton) {
         ui->addStaffButton->setVisible(adminRole);
@@ -2711,6 +2743,12 @@ void MainWindow::applyStaffFilter() {
         filtered.push_back(staff);
     }
     fillStaffsList(filtered);
+}
+
+void MainWindow::clearStaffFilter() {
+    if (staffSearchEdit) staffSearchEdit->clear();
+    if (staffStatusFilter && staffStatusFilter->count() > 0) staffStatusFilter->setCurrentIndex(0);
+    applyStaffFilter();
 }
 
 void MainWindow::handleAddStaff() {

@@ -84,12 +84,16 @@ private:
     void refreshConfigInputs() const;
 
     void applyBookFilter();
+    void clearBookFilter();
     void fillBooksList(const core::DynamicArray<model::Book> &books);
     void applyReaderFilter();
+    void clearReaderFilter();
     void fillReadersList(const core::DynamicArray<model::Reader> &readers) const;
     void applyStaffFilter();
+    void clearStaffFilter();
     void fillStaffsList(const core::DynamicArray<model::Staff> &staffs) const;
     void applyLoanFilter();
+    void clearLoanFilter();
     void fillLoansList(const core::DynamicArray<model::Loan> &loans);
     void updateLoanActionButtons();
     void fillAccountsList(const core::DynamicArray<model::Account> &accounts);

@@ -9,7 +9,7 @@ QString buildDialogStylesheet() {
     QString s;
 
      // Màu nền cho QDialog (login)
-     s += "QDialog { background-color: #00D2FF; }";
+     s += "QDialog { background-color: #ffffff; }";
 
      // Base button style – primary action
     s += "QPushButton {"
