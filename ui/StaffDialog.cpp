@@ -222,12 +222,14 @@ void StaffDialog::accept() {
     errorLabel->setVisible(false);
     if (!validateInputs()) return;
 
-    // Kiểm tra trùng lặp số điện thoại
-    extern pbl2::service::StaffService *staffService;
-    const auto phone = phoneEdit->text().trimmed();
-    if (staffService && staffService->isDuplicatePhone(bridge::toCustomString(phone))) {
-        showError(tr("Số điện thoại đã tồn tại trong hệ thống."));
-        return;
+    // Chỉ kiểm tra trùng khi thêm mới
+    if (!editingMode) {
+        extern pbl2::service::StaffService *staffService;
+        const auto phone = phoneEdit->text().trimmed();
+        if (staffService && staffService->isDuplicatePhone(bridge::toCustomString(phone))) {
+            showError(tr("Số điện thoại đã tồn tại trong hệ thống."));
+            return;
+        }
     }
     QDialog::accept();
 }

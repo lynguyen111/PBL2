@@ -1680,20 +1680,20 @@ void MainWindow::showBookDetails(const model::Book &book) {
         root->addWidget(summaryValue);
     }
 
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
     buttons->setStyleSheet(QStringLiteral(
         "QDialogButtonBox QPushButton { font-weight: 600; }"
         "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
 
     QPushButton *rentButton = nullptr;
-    QPushButton *okButton = buttons->button(QDialogButtonBox::Ok);
+    QPushButton *closeButton = buttons->button(QDialogButtonBox::Close);
     if (staffRole) {
         rentButton = buttons->addButton(tr("Thuê"), QDialogButtonBox::ActionRole);
         rentButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        rentButton->setMinimumSize(120, 40);
-        rentButton->setMaximumWidth(140);
-        rentButton->setStyleSheet(QStringLiteral("min-width: 120px; min-height: 40px; font-weight: 600;"));
+        rentButton->setMinimumSize(140, 44);
+        rentButton->setMaximumWidth(180);
+        rentButton->setStyleSheet(QStringLiteral("min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt;"));
         rentButton->setDefault(false);
         connect(rentButton, &QPushButton::clicked, &dlg, [this, &dlg, bookId]() {
             dlg.accept();
@@ -1703,21 +1703,21 @@ void MainWindow::showBookDetails(const model::Book &book) {
             handleNewLoan(bookId);
         });
     }
-    if (okButton) {
-        okButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        okButton->setMinimumSize(120, 40);
-        okButton->setMaximumWidth(140);
-        okButton->setDefault(true);
-        okButton->setStyleSheet(QStringLiteral("min-width: 120px; min-height: 40px; font-weight: 600;"));
+    if (closeButton) {
+        closeButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        closeButton->setMinimumSize(140, 44);
+        closeButton->setMaximumWidth(180);
+        closeButton->setDefault(true);
+        closeButton->setStyleSheet(QStringLiteral("min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt;"));
     }
-    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
 
     // Đặt Thuê và OK cạnh nhau bằng layout ngang nhỏ
     auto *buttonRow = new QHBoxLayout;
     buttonRow->setSpacing(12);
     buttonRow->setAlignment(Qt::AlignRight);
     if (rentButton) buttonRow->addWidget(rentButton);
-    if (okButton) buttonRow->addWidget(okButton);
+    if (closeButton) buttonRow->addWidget(closeButton);
     root->addLayout(buttonRow);
 
     dlg.exec();
@@ -1758,22 +1758,20 @@ void MainWindow::showReaderDetails(const model::Reader &reader) const {
     addRow(tr("Trạng thái"), reader.isActive() ? tr("Đang hoạt động") : tr("Tạm khóa"));
 
     root->addLayout(form);
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
     buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt; }"
-        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
-    QPushButton *okButton = buttons->button(QDialogButtonBox::Ok);
-    if (okButton) {
-        okButton->setMinimumSize(140, 44);
-        okButton->setMaximumWidth(180);
-        okButton->setDefault(true);
+        "QDialogButtonBox QPushButton { min-width: 170px; min-height: 48px; font-weight: 700; font-size: 12pt; background: #0ea5e9; color: white; border-radius: 8px; }"
+        "QDialogButtonBox QPushButton:hover { background: #0284c7; }"
+        "QDialogButtonBox QPushButton:pressed { background: #0369a1; }"));
+    QPushButton *closeButton = buttons->button(QDialogButtonBox::Close);
+    if (closeButton) {
+        closeButton->setMinimumSize(170, 48);
+        closeButton->setMaximumWidth(220);
+        closeButton->setDefault(true);
     }
-    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    auto *buttonRow = new QHBoxLayout;
-    buttonRow->setAlignment(Qt::AlignRight);
-    if (okButton) buttonRow->addWidget(okButton);
-    root->addLayout(buttonRow);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
+    root->addWidget(buttons, 0, Qt::AlignRight);
 
     dlg.exec();
 }
@@ -1811,23 +1809,21 @@ void MainWindow::showStaffDetails(const model::Staff &staff) const {
     addRow(tr("Trạng thái"), staff.isActive() ? tr("Đang làm việc") : tr("Đã nghỉ việc"));
 
     root->addLayout(form);
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
     buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt; }"
-        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
-    QPushButton *okButton = buttons->button(QDialogButtonBox::Ok);
-    if (okButton) {
-        okButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        okButton->setMinimumSize(140, 44);
-        okButton->setMaximumWidth(180);
-        okButton->setDefault(true);
+        "QDialogButtonBox QPushButton { min-width: 170px; min-height: 48px; font-weight: 700; font-size: 12pt; background: #0ea5e9; color: white; border-radius: 8px; }"
+        "QDialogButtonBox QPushButton:hover { background: #0284c7; }"
+        "QDialogButtonBox QPushButton:pressed { background: #0369a1; }"));
+    QPushButton *closeButton = buttons->button(QDialogButtonBox::Close);
+    if (closeButton) {
+        closeButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        closeButton->setMinimumSize(170, 48);
+        closeButton->setMaximumWidth(220);
+        closeButton->setDefault(true);
     }
-    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    auto *buttonRow = new QHBoxLayout;
-    buttonRow->setAlignment(Qt::AlignRight);
-    if (okButton) buttonRow->addWidget(okButton);
-    root->addLayout(buttonRow);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
+    root->addWidget(buttons, 0, Qt::AlignRight);
 
     dlg.exec();
 }
@@ -3848,17 +3844,18 @@ void MainWindow::handleViewLoanReceipt() {
 
     root->addWidget(table);
 
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
     buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt; }"
-        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
-    if (auto *okButton = buttons->button(QDialogButtonBox::Ok)) {
-        okButton->setMinimumSize(140, 44);
-        okButton->setMaximumWidth(180);
-        okButton->setDefault(true);
+        "QDialogButtonBox QPushButton { min-width: 170px; min-height: 48px; font-weight: 700; font-size: 12pt; background: #0ea5e9; color: white; border-radius: 8px; }"
+        "QDialogButtonBox QPushButton:hover { background: #0284c7; }"
+        "QDialogButtonBox QPushButton:pressed { background: #0369a1; }"));
+    if (auto *closeButton = buttons->button(QDialogButtonBox::Close)) {
+        closeButton->setMinimumSize(170, 48);
+        closeButton->setMaximumWidth(220);
+        closeButton->setDefault(true);
     }
-    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
     root->addWidget(buttons, 0, Qt::AlignRight);
 
     dlg.exec();
