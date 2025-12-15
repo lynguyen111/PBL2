@@ -36,7 +36,7 @@ public:
     {
         if (LoginDialog->objectName().isEmpty())
             LoginDialog->setObjectName("LoginDialog");
-        LoginDialog->resize(600, 702);
+        LoginDialog->resize(567, 665);
         LoginDialog->setStyleSheet(QString::fromUtf8(""));
         titleLabel = new QLabel(LoginDialog);
         titleLabel->setObjectName("titleLabel");
@@ -51,32 +51,32 @@ public:
         titleLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
         errorLabel = new QLabel(LoginDialog);
         errorLabel->setObjectName("errorLabel");
-        errorLabel->setGeometry(QRect(120, 440, 371, 41));
+        errorLabel->setGeometry(QRect(110, 460, 371, 41));
         errorLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
         loginButton = new QPushButton(LoginDialog);
         loginButton->setObjectName("loginButton");
-        loginButton->setGeometry(QRect(340, 570, 151, 51));
+        loginButton->setGeometry(QRect(320, 520, 151, 51));
         QFont font1;
         font1.setPointSize(10);
         loginButton->setFont(font1);
         exitButton = new QPushButton(LoginDialog);
         exitButton->setObjectName("exitButton");
-        exitButton->setGeometry(QRect(90, 570, 161, 51));
+        exitButton->setGeometry(QRect(90, 520, 161, 51));
         exitButton->setFont(font1);
         exitButton->setAutoFillBackground(false);
         passwordEdit = new QLineEdit(LoginDialog);
         passwordEdit->setObjectName("passwordEdit");
-        passwordEdit->setGeometry(QRect(140, 350, 371, 51));
+        passwordEdit->setGeometry(QRect(140, 350, 351, 51));
         passwordEdit->setEchoMode(QLineEdit::EchoMode::Password);
         passwordLabel = new QLabel(LoginDialog);
         passwordLabel->setObjectName("passwordLabel");
         passwordLabel->setGeometry(QRect(30, 360, 81, 41));
         QFont font2;
-        font2.setFamilies({QString::fromUtf8("Sans Serif")});
+        font2.setFamilies({QString::fromUtf8("Arial")});
         passwordLabel->setFont(font2);
         usernameEdit = new QLineEdit(LoginDialog);
         usernameEdit->setObjectName("usernameEdit");
-        usernameEdit->setGeometry(QRect(140, 240, 371, 51));
+        usernameEdit->setGeometry(QRect(140, 240, 351, 51));
         usernameEdit->setTabletTracking(true);
         usernameLabel = new QLabel(LoginDialog);
         usernameLabel->setObjectName("usernameLabel");

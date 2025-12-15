@@ -59,6 +59,7 @@ public:
     QLineEdit *bookSearchEdit;
     QComboBox *bookStatusFilter;
     QPushButton *bookFilterButton;
+    QPushButton *bookClearButton;
     QListWidget *booksList;
     QGroupBox *booksActionsGroup;
     QHBoxLayout *booksActionsLayout;
@@ -74,6 +75,7 @@ public:
     QLineEdit *readerSearchEdit;
     QComboBox *readerStatusFilter;
     QPushButton *readerFilterButton;
+    QPushButton *readerClearButton;
     QListWidget *readersList;
     QGroupBox *readersActionsGroup;
     QHBoxLayout *readersActionsLayout;
@@ -89,6 +91,7 @@ public:
     QLineEdit *loanSearchEdit;
     QComboBox *loanStatusFilter;
     QPushButton *loanFilterButton;
+    QPushButton *loanClearButton;
     QListWidget *loansList;
     QGroupBox *loansActionsGroup;
     QHBoxLayout *loansActionsLayout;
@@ -123,6 +126,8 @@ public:
     QHBoxLayout *statsFilterLayout;
     QLabel *timePeriodLabel;
     QComboBox *timePeriodCombo;
+    QDateEdit *customStartDateEdit;
+    QDateEdit *customEndDateEdit;
     QPushButton *applyFilterButton;
     QSpacerItem *spacerItem;
     QWidget *staffsTab;
@@ -132,6 +137,7 @@ public:
     QLineEdit *staffSearchEdit;
     QComboBox *staffStatusFilter;
     QPushButton *staffFilterButton;
+    QPushButton *staffClearButton;
     QListWidget *staffsList;
     QGroupBox *staffsActionsGroup;
     QHBoxLayout *staffsActionsLayout;
@@ -169,7 +175,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName("MainWindow");
-        MainWindow->resize(1333, 929);
+        MainWindow->resize(1375, 967);
         MainWindow->setMinimumSize(QSize(800, 600));
         refreshAction = new QAction(MainWindow);
         refreshAction->setObjectName("refreshAction");
@@ -211,7 +217,7 @@ public:
         sizePolicy1.setVerticalStretch(0);
         sizePolicy1.setHeightForWidth(navigationList->sizePolicy().hasHeightForWidth());
         navigationList->setSizePolicy(sizePolicy1);
-        navigationList->setMinimumSize(QSize(220, 0));
+        navigationList->setMinimumSize(QSize(240, 0));
         navigationList->setMaximumSize(QSize(400, 16777215));
         navigationList->setFrameShape(QFrame::Shape::NoFrame);
         navigationList->setFrameShadow(QFrame::Shadow::Plain);
@@ -220,7 +226,7 @@ public:
         navigationList->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         navigationList->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
         navigationList->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-        navigationList->setIconSize(QSize(22, 22));
+        navigationList->setIconSize(QSize(28, 28));
         navigationList->setTextElideMode(Qt::TextElideMode::ElideNone);
         navigationList->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
         navigationList->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
@@ -317,6 +323,11 @@ public:
 
         booksFilterRow->addWidget(bookFilterButton);
 
+        bookClearButton = new QPushButton(booksFilterGroup);
+        bookClearButton->setObjectName("bookClearButton");
+
+        booksFilterRow->addWidget(bookClearButton);
+
 
         booksFilterLayout->addLayout(booksFilterRow);
 
@@ -396,6 +407,11 @@ public:
 
         readersFilterLayout->addWidget(readerFilterButton);
 
+        readerClearButton = new QPushButton(readersFilterGroup);
+        readerClearButton->setObjectName("readerClearButton");
+
+        readersFilterLayout->addWidget(readerClearButton);
+
 
         readersTabLayout->addWidget(readersFilterGroup);
 
@@ -471,6 +487,11 @@ public:
         loanFilterButton->setObjectName("loanFilterButton");
 
         loansFilterLayout->addWidget(loanFilterButton, 0, 2, 1, 1);
+
+        loanClearButton = new QPushButton(loansFilterGroup);
+        loanClearButton->setObjectName("loanClearButton");
+
+        loansFilterLayout->addWidget(loanClearButton, 0, 3, 1, 1);
 
 
         loansTabLayout->addWidget(loansFilterGroup);
@@ -615,12 +636,34 @@ public:
         statsTab = new QWidget();
         statsTab->setObjectName("statsTab");
         statsTab->setStyleSheet(QString::fromUtf8("QWidget#statsTab {\n"
-"    background-color: #c9cdd5ff;\n"
-"    border-image: url(:/icons/logobook.png) 0 0 0 0 stretch stretch;\n"
-"    background-image: url(:/icons/logobook.png);\n"
-"    background-repeat: no-repeat;\n"
-"    background-position: center;\n"
-"}"));
+"    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #56b6fa, stop:1 #3f9fe8);\n"
+"}\n"
+"QGroupBox#statsFilterGroup {\n"
+"    color: #e5f1ff;\n"
+"    border: 1px solid rgba(255,255,255,0.32);\n"
+"    border-radius: 12px;\n"
+"    background: rgba(255,255,255,0.12);\n"
+"    margin-top: 8px;\n"
+"    font-weight: 700;\n"
+"}\n"
+"QGroupBox#statsFilterGroup::title {\n"
+"    subcontrol-origin: margin;\n"
+"    left: 12px;\n"
+"    padding: 4px 6px;\n"
+"}\n"
+"#statsFilterGroup QLabel {\n"
+"    color: #e5f1ff;\n"
+"}\n"
+"#statsFilterGroup QComboBox,\n"
+"#statsFilterGroup QDateEdit,\n"
+"#statsFilterGroup QPushButton {\n"
+"    background: #ffffff;\n"
+"    border: none;\n"
+"    border-radius: 8px;\n"
+"    padding: 6px 10px;\n"
+"    color: #0f172a;\n"
+"}\n"
+"#statsFilterGroup QPushButton:hover { background: #e5f1ff; }"));
         statsTabOuterLayout = new QVBoxLayout(statsTab);
         statsTabOuterLayout->setSpacing(0);
         statsTabOuterLayout->setObjectName("statsTabOuterLayout");
@@ -649,14 +692,24 @@ public:
         statsFilterLayout->addWidget(timePeriodLabel);
 
         timePeriodCombo = new QComboBox(statsFilterGroup);
-        timePeriodCombo->addItem(QString());
-        timePeriodCombo->addItem(QString());
-        timePeriodCombo->addItem(QString());
-        timePeriodCombo->addItem(QString());
         timePeriodCombo->setObjectName("timePeriodCombo");
         timePeriodCombo->setMinimumSize(QSize(150, 0));
 
         statsFilterLayout->addWidget(timePeriodCombo);
+
+        customStartDateEdit = new QDateEdit(statsFilterGroup);
+        customStartDateEdit->setObjectName("customStartDateEdit");
+        customStartDateEdit->setMinimumSize(QSize(130, 0));
+        customStartDateEdit->setCalendarPopup(true);
+
+        statsFilterLayout->addWidget(customStartDateEdit);
+
+        customEndDateEdit = new QDateEdit(statsFilterGroup);
+        customEndDateEdit->setObjectName("customEndDateEdit");
+        customEndDateEdit->setMinimumSize(QSize(130, 0));
+        customEndDateEdit->setCalendarPopup(true);
+
+        statsFilterLayout->addWidget(customEndDateEdit);
 
         applyFilterButton = new QPushButton(statsFilterGroup);
         applyFilterButton->setObjectName("applyFilterButton");
@@ -707,6 +760,11 @@ public:
         staffFilterButton->setObjectName("staffFilterButton");
 
         staffsFilterLayout->addWidget(staffFilterButton);
+
+        staffClearButton = new QPushButton(staffsFilterGroup);
+        staffClearButton->setObjectName("staffClearButton");
+
+        staffsFilterLayout->addWidget(staffClearButton);
 
 
         staffsTabLayout->addWidget(staffsFilterGroup);
@@ -891,7 +949,7 @@ public:
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "H\341\273\206 TH\341\273\220NG CHO THU\303\212 TRUY\341\273\206N V\303\200 S\303\201CH PBL2", nullptr));
         refreshAction->setText(QCoreApplication::translate("MainWindow", "Reset", nullptr));
         logoutAction->setText(QCoreApplication::translate("MainWindow", "Logout", nullptr));
-        navigationTitle->setText(QCoreApplication::translate("MainWindow", "\304\220i\341\273\201u h\306\260\341\273\233ng", nullptr));
+        navigationTitle->setText(QCoreApplication::translate("MainWindow", "Qu\341\272\243n l\303\275 cho thu\303\252 truy\341\273\207n v\303\240 s\303\241ch", nullptr));
         refreshButton->setText(QCoreApplication::translate("MainWindow", "T\341\272\243i l\341\272\241i", nullptr));
         logoutButton->setText(QCoreApplication::translate("MainWindow", "\304\220\304\203ng xu\341\272\245t", nullptr));
         homeTitleLabel->setText(QCoreApplication::translate("MainWindow", "H\341\273\206 TH\341\273\220NG QU\341\272\242N L\303\235 CHO THU\303\212 S\303\201CH V\303\200 TRUY\341\273\206N", nullptr));
@@ -900,6 +958,7 @@ public:
         booksFilterGroup->setTitle(QCoreApplication::translate("MainWindow", "B\341\273\231 l\341\273\215c", nullptr));
         bookSearchEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "T\303\254m theo ti\303\252u \304\221\341\273\201, t\303\241c gi\341\272\243, th\341\273\203 lo\341\272\241i ho\341\272\267c nh\303\240 xu\341\272\245t b\341\272\243n", nullptr));
         bookFilterButton->setText(QCoreApplication::translate("MainWindow", "L\341\273\215c", nullptr));
+        bookClearButton->setText(QCoreApplication::translate("MainWindow", "X\303\263a l\341\273\215c", nullptr));
         booksActionsGroup->setTitle(QCoreApplication::translate("MainWindow", "T\303\241c v\341\273\245", nullptr));
         addBookButton->setText(QCoreApplication::translate("MainWindow", "Th\303\252m s\303\241ch", nullptr));
         editBookButton->setText(QCoreApplication::translate("MainWindow", "C\341\272\255p nh\341\272\255t", nullptr));
@@ -909,6 +968,7 @@ public:
         readersFilterGroup->setTitle(QCoreApplication::translate("MainWindow", "B\341\273\231 l\341\273\215c", nullptr));
         readerSearchEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "T\303\254m \304\221\341\273\231c gi\341\272\243 theo t\303\252n, m\303\243 \304\221\341\273\231c gi\341\272\243, email ho\341\272\267c s\341\273\221 \304\221i\341\273\207n tho\341\272\241i", nullptr));
         readerFilterButton->setText(QCoreApplication::translate("MainWindow", "L\341\273\215c", nullptr));
+        readerClearButton->setText(QCoreApplication::translate("MainWindow", "X\303\263a l\341\273\215c", nullptr));
         readersActionsGroup->setTitle(QCoreApplication::translate("MainWindow", "T\303\241c v\341\273\245", nullptr));
         addReaderButton->setText(QCoreApplication::translate("MainWindow", "Th\303\252m \304\221\341\273\231c gi\341\272\243", nullptr));
         editReaderButton->setText(QCoreApplication::translate("MainWindow", "C\341\272\255p nh\341\272\255t", nullptr));
@@ -918,6 +978,7 @@ public:
         loansFilterGroup->setTitle(QCoreApplication::translate("MainWindow", "B\341\273\231 l\341\273\215c", nullptr));
         loanSearchEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "T\303\254m theo m\303\243 m\306\260\341\273\243n, m\303\243 \304\221\341\273\231c gi\341\272\243 ho\341\272\267c m\303\243 s\303\241ch", nullptr));
         loanFilterButton->setText(QCoreApplication::translate("MainWindow", "L\341\273\215c", nullptr));
+        loanClearButton->setText(QCoreApplication::translate("MainWindow", "X\303\263a l\341\273\215c", nullptr));
         loansActionsGroup->setTitle(QCoreApplication::translate("MainWindow", "T\303\241c v\341\273\245", nullptr));
         newLoanButton->setText(QCoreApplication::translate("MainWindow", "L\341\272\255p phi\341\272\277u m\306\260\341\273\243n", nullptr));
         returnLoanButton->setText(QCoreApplication::translate("MainWindow", "\304\220\303\241nh d\341\272\245u \304\221\303\243 tr\341\272\243", nullptr));
@@ -938,16 +999,14 @@ public:
         tabs->setTabText(tabs->indexOf(reportsTab), QCoreApplication::translate("MainWindow", "B\303\241o c\303\241o", nullptr));
         statsFilterGroup->setTitle(QCoreApplication::translate("MainWindow", "B\341\273\231 l\341\273\215c", nullptr));
         timePeriodLabel->setText(QCoreApplication::translate("MainWindow", "Th\341\273\235i gian:", nullptr));
-        timePeriodCombo->setItemText(0, QCoreApplication::translate("MainWindow", "Tu\341\272\247n n\303\240y", nullptr));
-        timePeriodCombo->setItemText(1, QCoreApplication::translate("MainWindow", "Th\303\241ng n\303\240y", nullptr));
-        timePeriodCombo->setItemText(2, QCoreApplication::translate("MainWindow", "N\304\203m nay", nullptr));
-        timePeriodCombo->setItemText(3, QCoreApplication::translate("MainWindow", "T\341\272\245t c\341\272\243", nullptr));
-
+        customStartDateEdit->setDisplayFormat(QCoreApplication::translate("MainWindow", "yyyy-MM-dd", nullptr));
+        customEndDateEdit->setDisplayFormat(QCoreApplication::translate("MainWindow", "yyyy-MM-dd", nullptr));
         applyFilterButton->setText(QCoreApplication::translate("MainWindow", "\303\201p d\341\273\245ng", nullptr));
         tabs->setTabText(tabs->indexOf(statsTab), QCoreApplication::translate("MainWindow", "Th\341\273\221ng k\303\252", nullptr));
         staffsFilterGroup->setTitle(QCoreApplication::translate("MainWindow", "B\341\273\231 l\341\273\215c", nullptr));
         staffSearchEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "T\303\254m nh\303\242n vi\303\252n theo t\303\252n, m\303\243 nh\303\242n vi\303\252n ho\341\272\267c ch\341\273\251c v\341\273\245", nullptr));
         staffFilterButton->setText(QCoreApplication::translate("MainWindow", "L\341\273\215c", nullptr));
+        staffClearButton->setText(QCoreApplication::translate("MainWindow", "X\303\263a l\341\273\215c", nullptr));
         staffsActionsGroup->setTitle(QCoreApplication::translate("MainWindow", "T\303\241c v\341\273\245", nullptr));
         addStaffButton->setText(QCoreApplication::translate("MainWindow", "Th\303\252m nh\303\242n vi\303\252n", nullptr));
         editStaffButton->setText(QCoreApplication::translate("MainWindow", "C\341\272\255p nh\341\272\255t", nullptr));

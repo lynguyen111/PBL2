@@ -916,6 +916,7 @@
   /Users/nguyenly/Documents/PBL2/PBL2-Bookstore/core/Date.h \
   /Users/nguyenly/Documents/PBL2/PBL2-Bookstore/core/DateTime.h \
   /Users/nguyenly/Documents/PBL2/PBL2-Bookstore/core/DynamicArray.h \
+  /Users/nguyenly/Documents/PBL2/PBL2-Bookstore/header/model/Loan.h \
   /Users/nguyenly/Documents/PBL2/PBL2-Bookstore/header/model/ReportRequest.h \
   /opt/homebrew/Cellar/qtbase/6.9.3/lib/QtCore.framework/Versions/A/Headers/QString \
   /opt/homebrew/Cellar/qtbase/6.9.3/lib/QtCore.framework/Versions/A/Headers/q17memory.h \
