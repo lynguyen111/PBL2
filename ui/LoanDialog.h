@@ -27,6 +27,7 @@ public:
                QWidget *parent = nullptr);
 
     void presetLoanId(const QString &loanId, bool lockField = true);
+    void presetBook(const QString &bookId);
     [[nodiscard]] model::Loan loan() const;
 
 protected:

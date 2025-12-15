@@ -8,6 +8,7 @@
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QCompleter>
 #include <QLabel>
 #include <QLineEdit>
 #include <QVariant>
@@ -20,6 +21,21 @@ namespace {
 using pbl2::model::Book;
 using pbl2::model::Loan;
 using pbl2::model::Reader;
+
+void setupSearchableCombo(QComboBox *combo, const QString &placeholder = QString()) {
+    if (!combo) return;
+    combo->setEditable(true);
+    combo->setInsertPolicy(QComboBox::NoInsert);
+    if (QLineEdit *edit = combo->lineEdit()) {
+        edit->setPlaceholderText(placeholder);
+    }
+
+    auto *completer = new QCompleter(combo->model(), combo);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setFilterMode(Qt::MatchContains);
+    completer->setCompletionMode(QCompleter::PopupCompletion);
+    combo->setCompleter(completer);
+}
 
 QString displayReader(const Reader &reader) {
     const QString id = pbl2::bridge::toQString(reader.getId());
@@ -73,6 +89,14 @@ namespace pbl2::ui {
             bookCombo->addItem(displayBook(book), QVariant(bookId));
         }
 
+        setupSearchableCombo(readerCombo, tr("Tìm bạn đọc"));
+        setupSearchableCombo(bookCombo, tr("Tìm sách"));
+
+        readerCombo->setCurrentIndex(-1);
+        bookCombo->setCurrentIndex(-1);
+        readerCombo->clearEditText();
+        bookCombo->clearEditText();
+
         staffEdit->setText(staffUsername);
 
         borrowDateEdit = new QDateEdit(this);
@@ -121,6 +145,21 @@ namespace pbl2::ui {
         forceIdReadOnly = lockField;
         loanIdEdit->setText(loanId.trimmed());
         loanIdEdit->setReadOnly(editingMode || forceIdReadOnly);
+    }
+
+    void LoanDialog::presetBook(const QString &bookId) {
+        if (!bookCombo) return;
+        const QString trimmedId = bookId.trimmed();
+        if (trimmedId.isEmpty()) return;
+
+        for (int i = 0; i < bookCombo->count(); ++i) {
+            const QString optionId = bookCombo->itemData(i).toString();
+            if (optionId.compare(trimmedId, Qt::CaseInsensitive) == 0) {
+                bookCombo->setCurrentIndex(i);
+                readerCombo->setFocus();
+                break;
+            }
+        }
     }
 
     Loan LoanDialog::loan() const {

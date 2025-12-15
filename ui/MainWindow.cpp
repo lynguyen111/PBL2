@@ -752,6 +752,10 @@ QString bookStatusText(const core::CustomString &code) {
 
     QString reportStatusText(const QString &status) {
     const QString value = normalizedStatus(status);
+    if (value == QStringLiteral("BORROWED")) return QObject::tr("Đang mượn");
+    if (value == QStringLiteral("RETURNED")) return QObject::tr("Đã trả");
+    if (value == QStringLiteral("LOST")) return QObject::tr("Báo mất");
+    if (value == QStringLiteral("DAMAGED")) return QObject::tr("Báo hư");
     if (value == QStringLiteral("PENDING")) return QObject::tr("Chờ duyệt");
     if (value == QStringLiteral("APPROVED")) return QObject::tr("Đã chấp nhận");
     if (value == QStringLiteral("REJECTED")) return QObject::tr("Đã từ chối");
@@ -817,13 +821,29 @@ void MainWindow::setupUi() {
     ensureSummaryVisible(summaryOverdueValue, "0");
     ensureSummaryVisible(summaryFinesValue, "0 VND");
 
+    homeImageLabel = ui->homeImageLabel;
+    homeBooksValue = ui->homeBooksValue;
+    homeReadersValue = ui->homeReadersValue;
+    homeLoansValue = ui->homeLoansValue;
+    homeOverdueValue = ui->homeOverdueValue;
+
     if (ui->homeTitleLabel) {
         ui->homeTitleLabel->setStyleSheet(QStringLiteral("color: #0f172a; font-size: 20px; font-weight: 700;"));
         ui->homeTitleLabel->setWordWrap(true);
     }
     if (ui->homeHintLabel) {
-        ui->homeHintLabel->setStyleSheet(QStringLiteral("color: #475569; font-size: 14px;"));
+        ui->homeHintLabel->setStyleSheet(QStringLiteral("background: rgba(255,255,255,0.85); padding: 10px 14px; border-radius: 10px; font-weight: 600; color: #0f172a;"));
+        ui->homeHintLabel->setAlignment(Qt::AlignCenter);
         ui->homeHintLabel->setText(tr("Sử dụng các tab hoặc menu bên trái để truy cập nhanh các khu vực quản lý. Dữ liệu mới nhất về sách, bạn đọc và phiếu mượn sẽ được cập nhật ngay sau khi bạn tải lại."));
+    }
+    if (homeImageLabel) {
+        homeImageLabel->setAlignment(Qt::AlignCenter);
+        homeImageLabel->setScaledContents(false);
+        QPixmap pm(QStringLiteral(":/icons/logobook.png"));
+        if (!pm.isNull()) {
+            const QSize target = QSize(800, 520);
+            homeImageLabel->setPixmap(pm.scaled(target, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        }
     }
 
     bookSearchEdit = ui->bookSearchEdit;
@@ -1333,23 +1353,26 @@ void MainWindow::configureReportsTab() {
         connect(reportsList, &QListWidget::itemActivated, this, &MainWindow::handleViewReportDetails);
     }
 
+    const QDate today = currentDate();
+    const QDate startOfMonth(today.year(), today.month(), 1);
+
     if (reportFromFilter) {
         reportFromFilter->setCalendarPopup(true);
         reportFromFilter->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
         reportFromFilter->setDateRange(QDate(2000, 1, 1), QDate(7999, 12, 31));
-        reportFromFilter->setDate(currentDate());
+        reportFromFilter->setDate(startOfMonth);
         connect(reportFromFilter, &QDateEdit::dateChanged, this, &MainWindow::applyReportFilter);
     }
     if (reportToFilter) {
         reportToFilter->setCalendarPopup(true);
         reportToFilter->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
         reportToFilter->setDateRange(QDate(2000, 1, 1), QDate(7999, 12, 31));
-        reportToFilter->setDate(currentDate());
+        reportToFilter->setDate(today);
         connect(reportToFilter, &QDateEdit::dateChanged, this, &MainWindow::applyReportFilter);
     }
 
     if (reportStaffFilter) {
-        reportStaffFilter->setPlaceholderText(tr("Tìm kiếm nhân viên lập báo cáo"));
+        reportStaffFilter->setPlaceholderText(tr("Tìm bạn đọc, sách, trạng thái..."));
         connect(reportStaffFilter, &QLineEdit::textChanged, this, &MainWindow::applyReportFilter);
     }
     if (ui->reportApplyButton) {
@@ -1359,25 +1382,14 @@ void MainWindow::configureReportsTab() {
         connect(ui->reportClearButton, &QPushButton::clicked, [this]() { clearReportFilter(); });
     }
 
-    if (ui->submitReportButton) {
-        connect(ui->submitReportButton, &QPushButton::clicked, [this]() { handleSubmitReport(); });
+    // Ẩn toàn bộ tác vụ báo cáo — chế độ báo cáo tự động
+    if (ui->reportsActionsGroup) {
+        ui->reportsActionsGroup->setVisible(false);
     }
-    if (ui->approveReportButton) {
-        ui->approveReportButton->setVisible(adminRole);
-        connect(ui->approveReportButton, &QPushButton::clicked, [this]() {
-            handleReportStatusChange(QStringLiteral("APPROVED"));
-        });
-    }
-    if (ui->rejectReportButton) {
-        ui->rejectReportButton->setVisible(adminRole);
-        connect(ui->rejectReportButton, &QPushButton::clicked, [this]() {
-            handleReportStatusChange(QStringLiteral("REJECTED"));
-        });
-    }
-    if (ui->deleteReportButton) {
-        ui->deleteReportButton->setVisible(adminRole);
-        connect(ui->deleteReportButton, &QPushButton::clicked, this, &MainWindow::handleDeleteReport);
-    }
+    if (ui->submitReportButton) ui->submitReportButton->setVisible(false);
+    if (ui->approveReportButton) ui->approveReportButton->setVisible(false);
+    if (ui->rejectReportButton) ui->rejectReportButton->setVisible(false);
+    if (ui->deleteReportButton) ui->deleteReportButton->setVisible(false);
 }
 
 void MainWindow::configureAccountsTab() {
@@ -1534,6 +1546,7 @@ void MainWindow::reloadData() {
                                 .arg(currentConfig.getFinePerDay()));
     }
     updateStatisticsSummary();
+    updateHomeSummary();
 }
 
 void MainWindow::populateBooks() {
@@ -1626,6 +1639,7 @@ void MainWindow::showBookDetails(const model::Book &book) {
     coverLabel->setAlignment(Qt::AlignCenter);
     coverLabel->setStyleSheet(QStringLiteral("background: #3a3232; border: 2px solid #707880;"));
     const QString coverPath = bridge::toQString(book.getCoverImagePath());
+    const QString bookId = toQString(book.getId());
     if (!coverPath.isEmpty()) {
         QPixmap pm(coverPath);
         if (!pm.isNull()) {
@@ -1645,7 +1659,7 @@ void MainWindow::showBookDetails(const model::Book &book) {
         form->addRow(label, v);
     };
 
-    setRow(tr("Mã sách"), toQString(book.getId()));
+    setRow(tr("Mã sách"), bookId);
     setRow(tr("Tiêu đề"), toQString(book.getTitle().isEmpty() ? core::CustomStringLiteral("...") : book.getTitle()));
     setRow(tr("Tác giả"), toQString(book.getAuthor().isEmpty() ? core::CustomStringLiteral("...") : book.getAuthor()));
     setRow(tr("Thể loại"), toQString(book.getGenre()));
@@ -1667,8 +1681,44 @@ void MainWindow::showBookDetails(const model::Book &book) {
     }
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    buttons->setCenterButtons(true);
+    buttons->setStyleSheet(QStringLiteral(
+        "QDialogButtonBox QPushButton { font-weight: 600; }"
+        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
+
+    QPushButton *rentButton = nullptr;
+    QPushButton *okButton = buttons->button(QDialogButtonBox::Ok);
+    if (staffRole) {
+        rentButton = buttons->addButton(tr("Thuê"), QDialogButtonBox::ActionRole);
+        rentButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        rentButton->setMinimumSize(120, 40);
+        rentButton->setMaximumWidth(140);
+        rentButton->setStyleSheet(QStringLiteral("min-width: 120px; min-height: 40px; font-weight: 600;"));
+        rentButton->setDefault(false);
+        connect(rentButton, &QPushButton::clicked, &dlg, [this, &dlg, bookId]() {
+            dlg.accept();
+            if (tabs && ui->loansTab) {
+                tabs->setCurrentWidget(ui->loansTab);
+            }
+            handleNewLoan(bookId);
+        });
+    }
+    if (okButton) {
+        okButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        okButton->setMinimumSize(120, 40);
+        okButton->setMaximumWidth(140);
+        okButton->setDefault(true);
+        okButton->setStyleSheet(QStringLiteral("min-width: 120px; min-height: 40px; font-weight: 600;"));
+    }
     connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    root->addWidget(buttons);
+
+    // Đặt Thuê và OK cạnh nhau bằng layout ngang nhỏ
+    auto *buttonRow = new QHBoxLayout;
+    buttonRow->setSpacing(12);
+    buttonRow->setAlignment(Qt::AlignRight);
+    if (rentButton) buttonRow->addWidget(rentButton);
+    if (okButton) buttonRow->addWidget(okButton);
+    root->addLayout(buttonRow);
 
     dlg.exec();
 }
@@ -1709,8 +1759,21 @@ void MainWindow::showReaderDetails(const model::Reader &reader) const {
 
     root->addLayout(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    buttons->setCenterButtons(true);
+    buttons->setStyleSheet(QStringLiteral(
+        "QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt; }"
+        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
+    QPushButton *okButton = buttons->button(QDialogButtonBox::Ok);
+    if (okButton) {
+        okButton->setMinimumSize(140, 44);
+        okButton->setMaximumWidth(180);
+        okButton->setDefault(true);
+    }
     connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    root->addWidget(buttons);
+    auto *buttonRow = new QHBoxLayout;
+    buttonRow->setAlignment(Qt::AlignRight);
+    if (okButton) buttonRow->addWidget(okButton);
+    root->addLayout(buttonRow);
 
     dlg.exec();
 }
@@ -1749,8 +1812,22 @@ void MainWindow::showStaffDetails(const model::Staff &staff) const {
 
     root->addLayout(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    buttons->setCenterButtons(true);
+    buttons->setStyleSheet(QStringLiteral(
+        "QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt; }"
+        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
+    QPushButton *okButton = buttons->button(QDialogButtonBox::Ok);
+    if (okButton) {
+        okButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        okButton->setMinimumSize(140, 44);
+        okButton->setMaximumWidth(180);
+        okButton->setDefault(true);
+    }
     connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    root->addWidget(buttons);
+    auto *buttonRow = new QHBoxLayout;
+    buttonRow->setAlignment(Qt::AlignRight);
+    if (okButton) buttonRow->addWidget(okButton);
+    root->addLayout(buttonRow);
 
     dlg.exec();
 }
@@ -2088,6 +2165,59 @@ void MainWindow::updateLoanActionButtons() {
     if (ui->extendLoanButton) ui->extendLoanButton->setEnabled(enable);
 }
 
+void MainWindow::recordLoanReportEntry(const model::Loan &loan, const QString &eventCode, const QString &extraNote, int fine) {
+    model::ReportRequest entry;
+    const QString normalizedEvent = normalizedStatus(eventCode);
+    entry.setStaffUsername(currentAccount.getUsername());
+    entry.setFromDate(loan.getBorrowDate().isValid() ? loan.getBorrowDate() : toCoreDate(currentDate()));
+    entry.setToDate(toCoreDate(currentDate()));
+    entry.setHandledLoans(1);
+    entry.setLostOrDamaged(normalizedEvent == QStringLiteral("LOST") || normalizedEvent == QStringLiteral("DAMAGED") ? 1 : 0);
+    entry.setOverdueReaders(0);
+    entry.setAffectedBooks(loan.getBookId());
+    entry.setStatus(toCustomString(normalizedEvent));
+    entry.setCreatedAt(toCoreDateTime(bridge::currentDateTime()));
+
+    const QString loanId = toQString(loan.getLoanId());
+    const QString readerId = toQString(loan.getReaderId());
+    const QString bookId = toQString(loan.getBookId());
+
+    const auto readerNameById = [&](const QString &id) -> QString {
+        for (const auto &r : readersCache) {
+            if (toQString(r.getId()).compare(id, Qt::CaseInsensitive) == 0) {
+                return toQString(r.getFullName());
+            }
+        }
+        return id;
+    };
+    const auto bookTitleById = [&](const QString &id) -> QString {
+        for (const auto &b : booksCache) {
+            if (toQString(b.getId()).compare(id, Qt::CaseInsensitive) == 0) {
+                return toQString(b.getTitle());
+            }
+        }
+        return id;
+    };
+
+    const QString readerName = readerNameById(readerId);
+    const QString bookTitle = bookTitleById(bookId);
+    const QString borrowDate = loan.getBorrowDate().isValid()
+                                   ? toQDate(loan.getBorrowDate()).toString(QStringLiteral("dd/MM/yyyy"))
+                                   : tr("Không rõ");
+    QString note = tr("Bạn đọc: %1 (%2) | Sách: %3 (%4) | Mượn: %5 | Phiếu: %6 | Trạng thái: %7")
+                       .arg(readerName, readerId, bookTitle, bookId, borrowDate, loanId, reportStatusText(eventCode));
+    if (!extraNote.trimmed().isEmpty()) {
+        note.append(QStringLiteral(" | %1").arg(extraNote.trimmed()));
+    }
+    if (fine > 0) {
+        note.append(QStringLiteral(" | Phạt: %1 VND").arg(fine));
+    }
+    entry.setNotes(toCustomString(note));
+    if (!reportService.submitRequest(entry)) {
+        qWarning() << "Failed to persist auto report entry for loan" << loanId << "event" << normalizedEvent;
+    }
+}
+
 void MainWindow::populateReports() {
     reportsCache = reportService.fetchAll();
     applyReportFilter();
@@ -2105,25 +2235,37 @@ void MainWindow::fillReportsList(const core::DynamicArray<model::ReportRequest> 
     const QFontMetrics metrics(reportsList->font());
     const int minimumHeight = max(metrics.lineSpacing() * 4 + 24, 120);
 
+    const auto bookTitleById = [&](const QString &id) -> QString {
+        for (const auto &b : booksCache) {
+            if (toQString(b.getId()).compare(id, Qt::CaseInsensitive) == 0) {
+                return toQString(b.getTitle());
+            }
+        }
+        return id;
+    };
+
     int restoreRow = -1;
     for (int row = 0; row < reports.size(); ++row) {
         const auto &report = reports[row];
         const QString requestId = toQString(report.getRequestId());
         const QString staff = toQString(report.getStaffUsername());
-        const QString fromDate = report.getFromDate().isValid() ? toQDate(report.getFromDate()).toString(Qt::ISODate) : tr("Không rõ");
-        const QString toDate = report.getToDate().isValid() ? toQDate(report.getToDate()).toString(Qt::ISODate) : tr("Không rõ");
-        const QString createdAt = report.getCreatedAt().isValid() ? toQDateTime(report.getCreatedAt()).toString(Qt::ISODate) : tr("Không rõ");
+        const QString fromDate = report.getFromDate().isValid()
+                                     ? toQDate(report.getFromDate()).toString(QStringLiteral("dd/MM/yyyy"))
+                                     : tr("Không rõ");
+        const QString createdAt = report.getCreatedAt().isValid()
+                                      ? toQDateTime(report.getCreatedAt()).toString(QStringLiteral("dd/MM/yyyy"))
+                                      : tr("Không rõ");
         const QString statusCode = normalizedStatus(toQString(report.getStatus()));
         const QString statusText = reportStatusText(toQString(report.getStatus()));
         const QString notes = toQString(report.getNotes()).trimmed();
+        const QString bookId = toQString(report.getAffectedBooks()).trimmed();
+        const QString bookTitle = bookId.isEmpty() ? tr("Không rõ sách") : bookTitleById(bookId);
 
-        const QString headerLine = tr("%1 - %2").arg(requestId, staff.isEmpty() ? tr("Nhân viên không rõ") : staff);
-        const QString metaLine = tr("Từ: %1 | Đến: %2").arg(fromDate, toDate);
-        const QString detailLine = tr("Xử lý: %1 | Mất/Hư: %2 | Quá hạn: %3")
-                                      .arg(report.getHandledLoans())
-                                      .arg(report.getLostOrDamaged())
-                                      .arg(report.getOverdueReaders());
-        const QString extraDetail = tr("Tạo: %1").arg(createdAt);
+        const QString headerLine = notes.isEmpty() ? tr("Phiếu %1").arg(requestId) : notes;
+        const QString metaLine = tr("Sách: %1").arg(bookTitle);
+        const QString detailLine = tr("Mượn ngày: %1").arg(fromDate);
+        const QString extraDetail = tr("Ghi nhận: %1 | NV: %2")
+                                        .arg(createdAt, staff.isEmpty() ? tr("Không rõ") : staff);
 
         auto *item = new QListWidgetItem();
         item->setData(Qt::UserRole, requestId);
@@ -2134,9 +2276,13 @@ void MainWindow::fillReportsList(const core::DynamicArray<model::ReportRequest> 
         item->setData(kCardRoleSecondaryDetail, extraDetail);
         item->setData(kCardRoleBadgeText, statusText);
         item->setData(kCardRoleBadgeColor, statusBadgeColor(statusCode));
-        item->setData(kCardRolePillText, tr("Ngày tạo: %1").arg(createdAt));
+        item->setData(kCardRolePillText, tr("Phiếu mượn: %1").arg(requestId));
         item->setData(kCardRolePillColor, QVariant());
-        QStringList tooltipLines{headerLine, metaLine, detailLine, tr("Trạng thái: %1").arg(statusText), extraDetail};
+        QStringList tooltipLines{headerLine,
+                                 metaLine,
+                                 detailLine,
+                                 tr("Trạng thái: %1").arg(statusText),
+                                 extraDetail};
         if (!notes.isEmpty()) {
             tooltipLines.append(tr("Ghi chú: %1").arg(notes));
         }
@@ -2257,55 +2403,42 @@ void MainWindow::fillAccountsList(const core::DynamicArray<model::Account> &acco
 void MainWindow::applyReportFilter() {
     core::DynamicArray<model::ReportRequest> filtered;
     filtered.reserve(reportsCache.size());
-    const QString staffTerm = reportStaffFilter ? reportStaffFilter->text().trimmed().toLower() : QString();
-    const bool hasFrom = reportFromFilter && reportFromFilter->date() != reportFromFilter->minimumDate();
-    const bool hasTo = reportToFilter && reportToFilter->date() != reportToFilter->minimumDate();
+    const QString term = reportStaffFilter ? normalizeSearchText(reportStaffFilter->text()) : QString();
+    const bool hasFrom = reportFromFilter && reportFromFilter->date().isValid();
+    const bool hasTo = reportToFilter && reportToFilter->date().isValid();
     const QDate from = hasFrom ? reportFromFilter->date() : QDate();
     const QDate to = hasTo ? reportToFilter->date() : QDate();
 
-    const auto staffNameByUsername = [&](const QString &username) -> QString {
-        for (const auto &s : staffsCache) {
-            if (toQString(s.getId()).compare(username, Qt::CaseInsensitive) == 0 ||
-                toQString(s.getEmail()).compare(username, Qt::CaseInsensitive) == 0) {
-                return toQString(s.getFullName());
-            }
-        }
-        return {};
-    };
-
     for (const auto &req : reportsCache) {
-        const QString staffUsername = toQString(req.getStaffUsername());
         const QString statusCode = normalizedStatus(toQString(req.getStatus()));
         const QString statusText = reportStatusText(toQString(req.getStatus()));
         const QString notes = toQString(req.getNotes());
-        const QString staffName = staffNameByUsername(staffUsername);
         const QString haystack = QStringList{
-                                     toQString(req.getRequestId()),
-                                     staffUsername,
-                                     staffName,
-                                     statusCode,
-                                     statusText,
-                                     notes,
-                                 }
+                                         toQString(req.getRequestId()),
+                                         statusCode,
+                                         statusText,
+                                         notes,
+                                     }
                                      .join(' ')
                                      .toLower();
-        const bool fromValid = req.getFromDate().isValid();
-        const bool toValid = req.getToDate().isValid();
-        const QDate reqFrom = fromValid ? toQDate(req.getFromDate()) : QDate();
-        const QDate reqTo = toValid ? toQDate(req.getToDate()) : QDate();
 
-        if (!staffTerm.isEmpty() && !containsAllTokens(haystack, staffTerm)) continue;
-        if (hasFrom && (!fromValid || reqFrom < from)) continue;
-        if (hasTo && (!toValid || reqTo > to)) continue;
+        const bool hasBorrowDate = req.getFromDate().isValid();
+        const QDate borrowDate = hasBorrowDate ? toQDate(req.getFromDate()) : QDate();
+
+        if (!term.isEmpty() && !containsAllTokens(haystack, term)) continue;
+        if (hasFrom && (!hasBorrowDate || borrowDate < from)) continue;
+        if (hasTo && (!hasBorrowDate || borrowDate > to)) continue;
         filtered.push_back(req);
     }
     fillReportsList(filtered);
 }
 
 void MainWindow::clearReportFilter() {
+    const QDate today = currentDate();
+    const QDate startOfMonth(today.year(), today.month(), 1);
     if (reportStaffFilter) reportStaffFilter->clear();
-    if (reportFromFilter) reportFromFilter->setDate(reportFromFilter->minimumDate());
-    if (reportToFilter) reportToFilter->setDate(reportToFilter->minimumDate());
+    if (reportFromFilter) reportFromFilter->setDate(startOfMonth);
+    if (reportToFilter) reportToFilter->setDate(today);
     applyReportFilter();
 }
 
@@ -2353,6 +2486,25 @@ void MainWindow::refreshSimpleStats() {
     // Use the same logic as when the user clicks the filter button
     // so date range, cards, charts and the dashboard widget stay in sync.
     applyStatsFilter();
+}
+
+void MainWindow::updateHomeSummary() {
+    const int books = booksCache.size();
+    const int readers = readersCache.size();
+    const int loans = loansCache.size();
+    int overdue = 0;
+    const QDate today = currentDate();
+    for (const auto &loan : loansCache) {
+        const QString status = normalizedStatus(toQString(loan.getStatus()));
+        if (status != QStringLiteral("BORROWED") && status != QStringLiteral("OVERDUE")) continue;
+        const QDate dueDate = loan.getDueDate().isValid() ? toQDate(loan.getDueDate()) : QDate();
+        if (dueDate.isValid() && dueDate < today) overdue++;
+    }
+
+    if (homeBooksValue) homeBooksValue->setText(QString::number(books));
+    if (homeReadersValue) homeReadersValue->setText(QString::number(readers));
+    if (homeLoansValue) homeLoansValue->setText(QString::number(loans));
+    if (homeOverdueValue) homeOverdueValue->setText(QString::number(overdue));
 }
 
 void MainWindow::updateStatsCards() {
@@ -3197,7 +3349,7 @@ void MainWindow::handleToggleReaderActive() {
     notifyEvent(message, EventSeverity::Success, 2000);
 }
 
-void MainWindow::handleNewLoan() {
+void MainWindow::handleNewLoan(const QString &preselectedBookId) {
     if (!staffRole) return;
     if (readersCache.isEmpty() || booksCache.isEmpty()) {
         showWarningDialog(tr("Thiếu dữ liệu"), tr("Cần có ít nhất một bạn đọc và một cuốn sách."));
@@ -3215,6 +3367,9 @@ void MainWindow::handleNewLoan() {
     const QString staffDisplay = toQString(currentAccount.getUsername()).trimmed();
     LoanDialog dialog(availableReaders, booksCache, currentConfig.getMaxBorrowDays(), staffDisplay, this);
     dialog.presetLoanId(nextLoanId(), true);
+    if (!preselectedBookId.trimmed().isEmpty()) {
+        dialog.presetBook(preselectedBookId);
+    }
     if (dialog.exec() != QDialog::Accepted) return;
     auto loan = dialog.loan();
     loan.setStaffUsername(currentAccount.getUsername());
@@ -3222,6 +3377,23 @@ void MainWindow::handleNewLoan() {
         showWarningDialog(tr("Trùng lặp"), tr("Mã phiếu này đã tồn tại."));
         return;
     }
+
+    // Không cho phép cùng bạn đọc thuê trùng sách nếu còn đang mượn
+    const auto existingLoans = loanService.fetchAll();
+    const QString newReaderId = toQString(loan.getReaderId());
+    const QString newBookId = toQString(loan.getBookId());
+    const bool duplicateActiveLoan = ranges::any_of(existingLoans, [&](const model::Loan &l) {
+        const QString status = normalizedStatus(toQString(l.getStatus()));
+        if (status != QStringLiteral("BORROWED") && status != QStringLiteral("OVERDUE")) return false;
+        return toQString(l.getReaderId()).compare(newReaderId, Qt::CaseInsensitive) == 0 &&
+               toQString(l.getBookId()).compare(newBookId, Qt::CaseInsensitive) == 0;
+    });
+    if (duplicateActiveLoan) {
+        showWarningDialog(tr("Không hợp lệ"),
+                          tr("Bạn đọc này đang mượn cuốn sách này. Không thể lập phiếu mới cho cùng sách khi chưa trả."));
+        return;
+    }
+
     const auto bookOpt = bookService.findById(loan.getBookId());
     if (!bookOpt.has_value()) {
         showWarningDialog(tr("Không tìm thấy"), tr("Không tìm thấy sách đã chọn"));
@@ -3246,6 +3418,7 @@ void MainWindow::handleNewLoan() {
         return;
     }
 
+    recordLoanReportEntry(loan, QStringLiteral("BORROWED"));
     reloadData();
     notifyEvent(tr("Đã tạo phiếu mượn."), EventSeverity::Success, 2000);
 }
@@ -3304,6 +3477,12 @@ void MainWindow::handleMarkReturned() {
             showWarningDialog(tr("Cảnh báo"), tr("Không thể cập nhật số lượng sách."));
         }
     }
+
+    model::Loan logLoan = *loanOpt;
+    logLoan.setStatus(core::CustomStringLiteral("RETURNED"));
+    logLoan.setReturnDate(toCoreDate(returnDate));
+    const QString lateNote = lateDays > 0 ? tr("Trả trễ %1 ngày").arg(lateDays) : QString();
+    recordLoanReportEntry(logLoan, QStringLiteral("RETURNED"), lateNote, fine);
 
     reloadData();
     notifyEvent(tr("Đã đóng phiếu. Tiền phạt: %1 VND").arg(fine), EventSeverity::Success, 3000);
@@ -3517,31 +3696,11 @@ void MainWindow::handleLossOrDamage(const QString &status) {
         return;
     }
 
-    model::ReportRequest req;
-    const QString prefix = status == QStringLiteral("LOST") ? QStringLiteral("MẤT") : QStringLiteral("HƯ");
-    const QString requestId = QStringLiteral("%1-%2")
-                                  .arg(prefix, currentDateTime().toString(QStringLiteral("yyyyMMddhhmmss")));
-    req.setRequestId(toCustomString(requestId));
-    req.setStaffUsername(currentAccount.getUsername());
-    req.setFromDate(toCoreDate(currentDate()));
-    req.setToDate(toCoreDate(currentDate()));
-    req.setHandledLoans(1);
-    req.setLostOrDamaged(1);
-    req.setOverdueReaders(0);
-    const QString affectedId = toQString(loanOpt->getBookId()).trimmed();
-    if (!affectedId.isEmpty()) {
-        req.setAffectedBooks(toCustomString(QStringLiteral("%1:1").arg(affectedId)));
-    }
+    model::Loan logLoan = *loanOpt;
+    logLoan.setStatus(statusKey);
+    logLoan.setReturnDate(toCoreDate(today));
     const QString statusLabel = status == QStringLiteral("LOST") ? tr("Mất sách") : tr("Hư hỏng");
-    req.setNotes(toCustomString(
-        tr("%1 - phiếu %2 - lý do: %3 - tiền đề xuất: %4 VND")
-            .arg(statusLabel, loanId, reason)
-            .arg(fee)));
-    req.setStatus(core::CustomStringLiteral("PENDING"));
-    req.setCreatedAt(toCoreDateTime(currentDateTime()));
-    if (!reportService.submitRequest(req)) {
-        showWarningDialog(tr("Cảnh báo"), tr("Không thể ghi nhận báo cáo."));
-    }
+    recordLoanReportEntry(logLoan, status, reason, fee);
 
     reloadData();
     notifyEvent(tr("Đã ghi nhận %1.").arg(statusLabel.toLower()), EventSeverity::Success, 3000);
@@ -3690,8 +3849,17 @@ void MainWindow::handleViewLoanReceipt() {
     root->addWidget(table);
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    buttons->setCenterButtons(true);
+    buttons->setStyleSheet(QStringLiteral(
+        "QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt; }"
+        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
+    if (auto *okButton = buttons->button(QDialogButtonBox::Ok)) {
+        okButton->setMinimumSize(140, 44);
+        okButton->setMaximumWidth(180);
+        okButton->setDefault(true);
+    }
     connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    root->addWidget(buttons);
+    root->addWidget(buttons, 0, Qt::AlignRight);
 
     dlg.exec();
 }

@@ -61,7 +61,7 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
                   "QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { "
                   "  min-height: 32px; font-size: 11pt; } "
                   "QDialogButtonBox QPushButton { "
-                  "  min-width: 90px; min-height: 32px; font-size: 11pt; } "
+                  "  min-width: 120px; min-height: 40px; font-size: 11pt; font-weight: 600; } "
                   "QLabel { font-size: 11pt; } ");
 
     idEdit = new QLineEdit(this);
@@ -141,6 +141,14 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     formGroup->setLayout(form);
 
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    buttonBox->setCenterButtons(true);
+    if (auto *okBtn = buttonBox->button(QDialogButtonBox::Ok)) {
+        okBtn->setMinimumSize(120, 40);
+        okBtn->setDefault(true);
+    }
+    if (auto *cancelBtn = buttonBox->button(QDialogButtonBox::Cancel)) {
+        cancelBtn->setMinimumSize(120, 40);
+    }
     connect(buttonBox, &QDialogButtonBox::accepted, this, &BookDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &BookDialog::reject);
 
@@ -149,7 +157,7 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     layout->setSpacing(12);
     layout->addWidget(formGroup);
     layout->addWidget(errorLabel);
-    layout->addWidget(buttonBox);
+    layout->addWidget(buttonBox, 0, Qt::AlignRight);
     setMinimumSize(640, 600);
 }
 

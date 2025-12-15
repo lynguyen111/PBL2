@@ -115,7 +115,7 @@ private:
     void handleDeleteStaff();
     void handleToggleStaffActive();
 
-    void handleNewLoan();
+    void handleNewLoan(const QString &preselectedBookId = QString());
     void handleMarkReturned();
     void handleExtendLoan();
     void handleMarkLost();
@@ -123,6 +123,8 @@ private:
     void handleDeleteLoan();
     void handleViewLoanReceipt();
     void handleLossOrDamage(const QString &status);
+
+    void recordLoanReportEntry(const model::Loan &loan, const QString &eventCode, const QString &extraNote = QString(), int fine = 0);
 
     void handleSubmitReport();
     void handleReportStatusChange(const QString &status);
@@ -164,6 +166,11 @@ private:
     QLabel *summaryReturnedValue{nullptr};
     QLabel *summaryOverdueValue{nullptr};
     QLabel *summaryFinesValue{nullptr};
+    QLabel *homeImageLabel{nullptr};
+    QLabel *homeBooksValue{nullptr};
+    QLabel *homeReadersValue{nullptr};
+    QLabel *homeLoansValue{nullptr};
+    QLabel *homeOverdueValue{nullptr};
     QPushButton *navRailButton{nullptr};
     QLabel *statsLabel{nullptr};
     
@@ -233,6 +240,7 @@ private:
     void updateStatsCharts();
     void updateStatsDashboardWidget();
     void applyStatsFilter();
+    void updateHomeSummary();
 
     bool adminRole{false};
     bool staffRole{false};

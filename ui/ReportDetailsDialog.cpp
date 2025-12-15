@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
+#include <QPushButton>
 
 #include "QtBridge.h"
 #include "../core/DynamicArray.h"
@@ -140,7 +141,7 @@ QLabel { font-size: 11pt; }
 QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
 )");
     // Modern font and light background
-    setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 11pt; } QDialogButtonBox QPushButton { min-width: 90px; min-height: 32px; font-size: 11pt; } QLabel { font-size: 11pt; } ");
+    setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 11pt; } QDialogButtonBox QPushButton { min-width: 120px; min-height: 40px; font-size: 11pt; font-weight: 600; } QLabel { font-size: 11pt; } ");
 
     const QString requestId = bridge::toQString(report.getRequestId());
     const QString staff = bridge::toQString(report.getStaffUsername());
@@ -184,6 +185,11 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     notesViewer->setMinimumHeight(140);
 
     auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close, this);
+    buttonBox->setCenterButtons(true);
+    if (auto *closeBtn = buttonBox->button(QDialogButtonBox::Close)) {
+        closeBtn->setMinimumSize(120, 40);
+        closeBtn->setDefault(true);
+    }
     connect(buttonBox, &QDialogButtonBox::rejected, this, &ReportDetailsDialog::reject);
 
     auto *layout = new QVBoxLayout(this);

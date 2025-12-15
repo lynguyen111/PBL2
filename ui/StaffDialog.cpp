@@ -10,6 +10,7 @@
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QPushButton>
 #include <QLabel>
 #include <QLineEdit>
 #include <QVBoxLayout>
@@ -35,7 +36,7 @@ QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDateEdit:focus, QPlainTextEdi
     border: 2px solid #2f6ad0; background: #f0f6ff;
 }
 QDialogButtonBox QPushButton, QPushButton {
-    min-width: 100px; min-height: 36px; font-size: 11pt; border-radius: 10px;
+    min-width: 120px; min-height: 40px; font-size: 11pt; font-weight: 600; border-radius: 10px;
     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2f6ad0, stop:1 #6c63ff);
     color: #fff; font-weight: 500; border: none;
 }
@@ -49,7 +50,7 @@ QLabel { font-size: 11pt; }
 QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
 )");
     // Modern font and light background
-    setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 11pt; } QDialogButtonBox QPushButton { min-width: 90px; min-height: 32px; font-size: 11pt; } QLabel { font-size: 11pt; } ");
+    setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 11pt; } QDialogButtonBox QPushButton { min-width: 120px; min-height: 40px; font-size: 11pt; font-weight: 600; } QLabel { font-size: 11pt; } ");
 
     idEdit = new QLineEdit(this);
         idEdit->setValidator(new QIntValidator(0, 2147483647, this)); // Chỉ cho phép nhập số
@@ -110,6 +111,14 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     formGroup->setLayout(form);
 
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    buttonBox->setCenterButtons(true);
+    if (auto *okBtn = buttonBox->button(QDialogButtonBox::Ok)) {
+        okBtn->setMinimumSize(120, 40);
+        okBtn->setDefault(true);
+    }
+    if (auto *cancelBtn = buttonBox->button(QDialogButtonBox::Cancel)) {
+        cancelBtn->setMinimumSize(120, 40);
+    }
     connect(buttonBox, &QDialogButtonBox::accepted, this, &StaffDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &StaffDialog::reject);
 
@@ -118,7 +127,7 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     layout->setSpacing(12);
     layout->addWidget(formGroup);
     layout->addWidget(errorLabel);
-    layout->addWidget(buttonBox);
+    layout->addWidget(buttonBox, 0, Qt::AlignRight);
     setMinimumSize(640, 600);
 }
 
