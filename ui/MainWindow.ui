@@ -204,233 +204,227 @@
       <widget class="QWidget" name="homeTab">
        <property name="styleSheet">
         <string notr="true">QWidget#homeTab {
-    background-color: #090e18ff;
-    border-image: url(:/icons/logobook.png) 0 0 0 0 stretch stretch;
-    background-image: url(:/icons/logobook.png);
-    background-repeat: no-repeat;
-    background-position: center;
+    background-color: #f8fafc;
 }</string>
-      </property>
-      <attribute name="title">
-       <string>Trang chủ</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="homeLayout">
-       <property name="leftMargin">
-        <number>18</number>
        </property>
-       <property name="topMargin">
-        <number>18</number>
-       </property>
-       <property name="rightMargin">
-        <number>18</number>
-       </property>
-       <property name="bottomMargin">
-        <number>18</number>
-       </property>
-       <property name="spacing">
-        <number>12</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="homeTitleLabel">
-         <property name="font">
-          <font>
-           <family>Academy Engraved LET</family>
-           <pointsize>18</pointsize>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>HỆ THỐNG QUẢN LÝ CHO THUÊ SÁCH VÀ TRUYỆN</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QFrame" name="homeSummaryFrame">
-         <property name="frameShape">
-          <enum>QFrame::Shape::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QFrame#homeSummaryFrame {
+       <attribute name="title">
+        <string>Trang chủ</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="homeLayout">
+        <property name="leftMargin">
+         <number>18</number>
+        </property>
+        <property name="topMargin">
+         <number>18</number>
+        </property>
+        <property name="rightMargin">
+         <number>18</number>
+        </property>
+        <property name="bottomMargin">
+         <number>18</number>
+        </property>
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="homeTitleLabel">
+          <property name="font">
+           <font>
+            <family>Academy Engraved LET</family>
+            <pointsize>18</pointsize>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>HỆ THỐNG QUẢN LÝ CHO THUÊ SÁCH VÀ TRUYỆN</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="homeSummaryFrame">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QFrame#homeSummaryFrame {
   background: rgba(255,255,255,0.7);
   border-radius: 10px;
   border: 1px solid rgba(0,0,0,0.1);
 }</string>
-         </property>
-         <layout class="QGridLayout" name="homeSummaryLayout">
-          <property name="leftMargin">
-           <number>16</number>
           </property>
-          <property name="topMargin">
-           <number>12</number>
+          <property name="frameShape">
+           <enum>QFrame::Shape::StyledPanel</enum>
           </property>
-          <property name="rightMargin">
-           <number>16</number>
+          <property name="frameShadow">
+           <enum>QFrame::Shadow::Raised</enum>
           </property>
-          <property name="bottomMargin">
-           <number>12</number>
+          <layout class="QGridLayout" name="homeSummaryLayout">
+           <property name="leftMargin">
+            <number>16</number>
+           </property>
+           <property name="topMargin">
+            <number>12</number>
+           </property>
+           <property name="rightMargin">
+            <number>16</number>
+           </property>
+           <property name="bottomMargin">
+            <number>12</number>
+           </property>
+           <property name="horizontalSpacing">
+            <number>18</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>6</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="homeBooksValue">
+             <property name="styleSheet">
+              <string notr="true">font-weight: 700; font-size: 16px;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="homeReadersValue">
+             <property name="styleSheet">
+              <string notr="true">font-weight: 700; font-size: 16px;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="homeLoansValue">
+             <property name="styleSheet">
+              <string notr="true">font-weight: 700; font-size: 16px;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="homeOverdueValue">
+             <property name="styleSheet">
+              <string notr="true">font-weight: 700; font-size: 16px; color: #b91c1c;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="homeBooksLabel">
+             <property name="text">
+              <string>Sách</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="homeReadersLabel">
+             <property name="text">
+              <string>Bạn đọc</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="homeLoansLabel">
+             <property name="text">
+              <string>Phiếu mượn</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="homeOverdueLabel">
+             <property name="text">
+              <string>Quá hạn</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="homeImageLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
           </property>
-          <property name="horizontalSpacing">
-           <number>18</number>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>600</height>
+           </size>
           </property>
-          <property name="verticalSpacing">
-           <number>6</number>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
           </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="homeBooksValue">
-            <property name="styleSheet">
-             <string notr="true">font-weight: 700; font-size: 16px;</string>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="homeReadersValue">
-            <property name="styleSheet">
-             <string notr="true">font-weight: 700; font-size: 16px;</string>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="homeLoansValue">
-            <property name="styleSheet">
-             <string notr="true">font-weight: 700; font-size: 16px;</string>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLabel" name="homeOverdueValue">
-            <property name="styleSheet">
-             <string notr="true">font-weight: 700; font-size: 16px; color: #b91c1c;</string>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="homeBooksLabel">
-            <property name="text">
-             <string>Sách</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="homeReadersLabel">
-            <property name="text">
-             <string>Bạn đọc</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="homeLoansLabel">
-            <property name="text">
-             <string>Phiếu mượn</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLabel" name="homeOverdueLabel">
-            <property name="text">
-             <string>Quá hạn</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <spacer name="homeTopSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>12</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="homeImageLabel">
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="homeHintLabel">
-         <property name="text">
-          <string>Sử dụng các tab hoặc menu bên trái để truy cập nhanh các khu vực quản lý. Dữ liệu mới nhất về sách, bạn đọc và phiếu mượn sẽ được cập nhật ngay sau khi bạn tải lại.</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">background: rgba(255,255,255,0.85);
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="homeHintLabel">
+          <property name="styleSheet">
+           <string notr="true">background: rgba(255,255,255,0.85);
 padding: 10px 14px;
 border-radius: 10px;
 font-weight: 600;
 color: #0f172a;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="homeBottomSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>12</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
+          </property>
+          <property name="text">
+           <string>Sử dụng các tab hoặc menu bên trái để truy cập nhanh các khu vực quản lý. Dữ liệu mới nhất về sách, bạn đọc và phiếu mượn sẽ được cập nhật ngay sau khi bạn tải lại.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="booksTab">
        <property name="styleSheet">
         <string notr="true">QWidget#booksTab {
@@ -481,13 +475,13 @@ color: #0f172a;</string>
            <property name="bottomMargin">
             <number>18</number>
            </property>
-          <item>
-           <layout class="QHBoxLayout" name="booksFilterRow">
-            <property name="spacing">
-             <number>10</number>
-            </property>
            <item>
-             <widget class="QLineEdit" name="bookSearchEdit">
+            <layout class="QHBoxLayout" name="booksFilterRow">
+             <property name="spacing">
+              <number>10</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="bookSearchEdit">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -502,13 +496,13 @@ color: #0f172a;</string>
                </property>
                <property name="maximumSize">
                 <size>
-                <width>500</width>
-                <height>40</height>
-               </size>
+                 <width>500</width>
+                 <height>40</height>
+                </size>
                </property>
-                <property name="placeholderText">
-                 <string>Tìm theo tiêu đề, tác giả, thể loại hoặc nhà xuất bản</string>
-                </property>
+               <property name="placeholderText">
+                <string>Tìm theo tiêu đề, tác giả, thể loại hoặc nhà xuất bản</string>
+               </property>
               </widget>
              </item>
              <item>
@@ -528,63 +522,63 @@ color: #0f172a;</string>
               </widget>
              </item>
              <item>
-             <widget class="QPushButton" name="bookFilterButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>120</width>
-                <height>36</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Lọc</string>
-              </property>
-             </widget>
-            </item>
-           <item>
-            <widget class="QPushButton" name="bookClearButton">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>120</width>
-                <height>36</height>
-               </size>
-              </property>
-              <property name="text">
-              <string>Xóa lọc</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="booksFilterSpacer">
-             <property name="orientation">
-              <enum>Qt::Orientation::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
+              <widget class="QPushButton" name="bookFilterButton">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>120</width>
+                 <height>36</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Lọc</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="bookClearButton">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>120</width>
+                 <height>36</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Xóa lọc</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="booksFilterSpacer">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Policy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
-         </item>
-         </layout>
-        </widget>
+         </widget>
         </item>
         <item>
          <widget class="QListWidget" name="booksList"/>
@@ -791,7 +785,7 @@ color: #0f172a;</string>
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
+              <enum>QSizePolicy::Policy::Expanding</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -1009,7 +1003,7 @@ color: #0f172a;</string>
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
+              <enum>QSizePolicy::Policy::Expanding</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -1263,7 +1257,7 @@ color: #0f172a;</string>
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
+              <enum>QSizePolicy::Policy::Expanding</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -1460,11 +1454,11 @@ QGroupBox#statsFilterGroup::title {
                  <height>0</height>
                 </size>
                </property>
-               <property name="calendarPopup">
-                <bool>true</bool>
-               </property>
                <property name="displayFormat">
                 <string>yyyy-MM-dd</string>
+               </property>
+               <property name="calendarPopup">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -1476,11 +1470,11 @@ QGroupBox#statsFilterGroup::title {
                  <height>0</height>
                 </size>
                </property>
-               <property name="calendarPopup">
-                <bool>true</bool>
-               </property>
                <property name="displayFormat">
                 <string>yyyy-MM-dd</string>
+               </property>
+               <property name="calendarPopup">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -1646,7 +1640,7 @@ QGroupBox#statsFilterGroup::title {
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
+              <enum>QSizePolicy::Policy::Expanding</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -1929,7 +1923,7 @@ QGroupBox#statsFilterGroup::title {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1333</width>
+     <width>1375</width>
      <height>37</height>
     </rect>
    </property>

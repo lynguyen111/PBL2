@@ -837,13 +837,13 @@ void MainWindow::setupUi() {
         ui->homeHintLabel->setText(tr("Sử dụng các tab hoặc menu bên trái để truy cập nhanh các khu vực quản lý. Dữ liệu mới nhất về sách, bạn đọc và phiếu mượn sẽ được cập nhật ngay sau khi bạn tải lại."));
     }
     if (homeImageLabel) {
+        homeImageLabel->setVisible(true);
         homeImageLabel->setAlignment(Qt::AlignCenter);
         homeImageLabel->setScaledContents(false);
-        QPixmap pm(QStringLiteral(":/icons/logobook.png"));
-        if (!pm.isNull()) {
-            const QSize target = QSize(800, 520);
-            homeImageLabel->setPixmap(pm.scaled(target, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        if (ui->homeLayout) {
+            ui->homeLayout->setStretchFactor(homeImageLabel, 10);
         }
+        refreshHomeLogo();
     }
 
     bookSearchEdit = ui->bookSearchEdit;
@@ -1382,14 +1382,21 @@ void MainWindow::configureReportsTab() {
         connect(ui->reportClearButton, &QPushButton::clicked, [this]() { clearReportFilter(); });
     }
 
-    // Ẩn toàn bộ tác vụ báo cáo — chế độ báo cáo tự động
+    // Chỉ hiển thị nút xóa cho báo cáo
     if (ui->reportsActionsGroup) {
-        ui->reportsActionsGroup->setVisible(false);
+        ui->reportsActionsGroup->setVisible(staffRole || adminRole);
     }
     if (ui->submitReportButton) ui->submitReportButton->setVisible(false);
     if (ui->approveReportButton) ui->approveReportButton->setVisible(false);
     if (ui->rejectReportButton) ui->rejectReportButton->setVisible(false);
-    if (ui->deleteReportButton) ui->deleteReportButton->setVisible(false);
+    if (ui->deleteReportButton) {
+        ui->deleteReportButton->setVisible(staffRole || adminRole);
+        ui->deleteReportButton->setStyleSheet(QStringLiteral(
+            "QPushButton { background: #dc2626; color: #fff; font-weight: 700; border-radius: 8px; padding: 8px 16px; }"
+            "QPushButton:hover { background: #b91c1c; }"
+            "QPushButton:pressed { background: #991b1b; }"));
+        connect(ui->deleteReportButton, &QPushButton::clicked, [this]() { handleDeleteReport(); });
+    }
 }
 
 void MainWindow::configureAccountsTab() {
@@ -2503,6 +2510,15 @@ void MainWindow::updateHomeSummary() {
     if (homeOverdueValue) homeOverdueValue->setText(QString::number(overdue));
 }
 
+void MainWindow::refreshHomeLogo() {
+    if (!homeImageLabel) return;
+    QPixmap pm(QStringLiteral(":/icons/logobook.png"));
+    if (pm.isNull()) return;
+    const QSize target = homeImageLabel->size();
+    if (target.width() <= 0 || target.height() <= 0) return;
+    homeImageLabel->setPixmap(pm.scaled(target, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
+
 void MainWindow::updateStatsCards() {
     if (!statsWidget) return;
 
@@ -3387,6 +3403,19 @@ void MainWindow::handleNewLoan(const QString &preselectedBookId) {
     if (duplicateActiveLoan) {
         showWarningDialog(tr("Không hợp lệ"),
                           tr("Bạn đọc này đang mượn cuốn sách này. Không thể lập phiếu mới cho cùng sách khi chưa trả."));
+        return;
+    }
+    const int maxBooksPerReader = max(1, currentConfig.getMaxBooksPerReader());
+    int activeLoansForReader = 0;
+    for (const auto &l : existingLoans) {
+        const QString status = normalizedStatus(toQString(l.getStatus()));
+        if (status != QStringLiteral("BORROWED") && status != QStringLiteral("OVERDUE")) continue;
+        if (toQString(l.getReaderId()).compare(newReaderId, Qt::CaseInsensitive) != 0) continue;
+        ++activeLoansForReader;
+        if (activeLoansForReader >= maxBooksPerReader) break;
+    }
+    if (activeLoansForReader >= maxBooksPerReader) {
+        showWarningDialog(tr("Không khả dụng"), tr("Không thể được mượn thêm nữa"));
         return;
     }
 
@@ -4391,6 +4420,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 void MainWindow::resizeEvent(QResizeEvent *event) {
     QMainWindow::resizeEvent(event);
     repositionNavRailButton();
+    refreshHomeLogo();
 }
 
 void MainWindow::handleNavigationSelection(const int index) const {

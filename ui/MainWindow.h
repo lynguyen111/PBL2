@@ -241,6 +241,7 @@ private:
     void updateStatsDashboardWidget();
     void applyStatsFilter();
     void updateHomeSummary();
+    void refreshHomeLogo();
 
     bool adminRole{false};
     bool staffRole{false};

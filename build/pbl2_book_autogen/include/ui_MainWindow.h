@@ -49,7 +49,6 @@ public:
     QPushButton *logoutButton;
     QTabWidget *tabs;
     QWidget *homeTab;
-    QVBoxLayout *homeLayout;
     QLabel *homeTitleLabel;
     QFrame *homeSummaryFrame;
     QGridLayout *homeSummaryLayout;
@@ -61,10 +60,8 @@ public:
     QLabel *homeReadersLabel;
     QLabel *homeLoansLabel;
     QLabel *homeOverdueLabel;
-    QSpacerItem *homeTopSpacer;
     QLabel *homeImageLabel;
     QLabel *homeHintLabel;
-    QSpacerItem *homeBottomSpacer;
     QWidget *booksTab;
     QVBoxLayout *booksTabLayout;
     QGroupBox *booksFilterGroup;
@@ -286,36 +283,27 @@ public:
         homeTab = new QWidget();
         homeTab->setObjectName("homeTab");
         homeTab->setStyleSheet(QString::fromUtf8("QWidget#homeTab {\n"
-"    background-color: #090e18ff;\n"
-"    border-image: url(:/icons/logobook.png) 0 0 0 0 stretch stretch;\n"
-"    background-image: url(:/icons/logobook.png);\n"
-"    background-repeat: no-repeat;\n"
-"    background-position: center;\n"
+"    background-color: #f8fafc;\n"
 "}"));
-        homeLayout = new QVBoxLayout(homeTab);
-        homeLayout->setSpacing(12);
-        homeLayout->setObjectName("homeLayout");
-        homeLayout->setContentsMargins(18, 18, 18, 18);
         homeTitleLabel = new QLabel(homeTab);
         homeTitleLabel->setObjectName("homeTitleLabel");
+        homeTitleLabel->setGeometry(QRect(280, 10, 471, 26));
         QFont font1;
         font1.setFamilies({QString::fromUtf8("Academy Engraved LET")});
         font1.setPointSize(18);
         font1.setBold(false);
         homeTitleLabel->setFont(font1);
         homeTitleLabel->setAlignment(Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop);
-
-        homeLayout->addWidget(homeTitleLabel);
-
         homeSummaryFrame = new QFrame(homeTab);
         homeSummaryFrame->setObjectName("homeSummaryFrame");
-        homeSummaryFrame->setFrameShape(QFrame::Shape::StyledPanel);
-        homeSummaryFrame->setFrameShadow(QFrame::Shadow::Raised);
+        homeSummaryFrame->setGeometry(QRect(70, 50, 931, 67));
         homeSummaryFrame->setStyleSheet(QString::fromUtf8("QFrame#homeSummaryFrame {\n"
 "  background: rgba(255,255,255,0.7);\n"
 "  border-radius: 10px;\n"
 "  border: 1px solid rgba(0,0,0,0.1);\n"
 "}"));
+        homeSummaryFrame->setFrameShape(QFrame::Shape::StyledPanel);
+        homeSummaryFrame->setFrameShadow(QFrame::Shadow::Raised);
         homeSummaryLayout = new QGridLayout(homeSummaryFrame);
         homeSummaryLayout->setObjectName("homeSummaryLayout");
         homeSummaryLayout->setHorizontalSpacing(18);
@@ -373,35 +361,20 @@ public:
 
         homeSummaryLayout->addWidget(homeOverdueLabel, 1, 3, 1, 1);
 
-
-        homeLayout->addWidget(homeSummaryFrame);
-
-        homeTopSpacer = new QSpacerItem(20, 12, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
-
-        homeLayout->addItem(homeTopSpacer);
-
         homeImageLabel = new QLabel(homeTab);
         homeImageLabel->setObjectName("homeImageLabel");
+        homeImageLabel->setGeometry(QRect(18, 447, 16, 16));
         homeImageLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
-
-        homeLayout->addWidget(homeImageLabel);
-
         homeHintLabel = new QLabel(homeTab);
         homeHintLabel->setObjectName("homeHintLabel");
+        homeHintLabel->setGeometry(QRect(20, 660, 1017, 52));
         homeHintLabel->setStyleSheet(QString::fromUtf8("background: rgba(255,255,255,0.85);\n"
 "padding: 10px 14px;\n"
 "border-radius: 10px;\n"
 "font-weight: 600;\n"
 "color: #0f172a;"));
-        homeHintLabel->setAlignment(Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter);
+        homeHintLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
         homeHintLabel->setWordWrap(true);
-
-        homeLayout->addWidget(homeHintLabel);
-
-        homeBottomSpacer = new QSpacerItem(20, 12, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
-
-        homeLayout->addItem(homeBottomSpacer);
-
         tabs->addTab(homeTab, QString());
         booksTab = new QWidget();
         booksTab->setObjectName("booksTab");
@@ -1132,7 +1105,7 @@ public:
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 1333, 37));
+        menubar->setGeometry(QRect(0, 0, 1375, 37));
         menuSystem = new QMenu(menubar);
         menuSystem->setObjectName("menuSystem");
         MainWindow->setMenuBar(menubar);

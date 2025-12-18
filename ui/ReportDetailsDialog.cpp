@@ -3,7 +3,7 @@
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QLabel>
-#include <QPlainTextEdit>
+#include <QSet>
 #include <QVBoxLayout>
 #include <QPushButton>
 
@@ -103,6 +103,54 @@ core::DynamicArray<AffectedBookRow> parseAffectedBooks(const QString &raw, const
     return rows;
 }
 
+core::DynamicArray<QPair<QString, QString>> parseNoteFields(const QString &raw) {
+    core::DynamicArray<QPair<QString, QString>> rows;
+    if (raw.trimmed().isEmpty()) return rows;
+    const QStringList tokens = raw.split('|');
+    for (const QString &token : tokens) {
+        const QString trimmed = token.trimmed();
+        if (trimmed.isEmpty()) continue;
+        const int sep = trimmed.indexOf(':');
+        if (sep <= 0) {
+            const QString key = QObject::tr("Thông tin khác");
+            int existing = -1;
+            for (int i = 0; i < rows.size(); ++i) {
+                if (rows[i].first.compare(key, Qt::CaseInsensitive) == 0) {
+                    existing = i;
+                    break;
+                }
+            }
+            if (existing >= 0) {
+                rows[existing].second = QStringLiteral("%1 | %2").arg(rows[existing].second, trimmed);
+            } else {
+                rows.append({key, trimmed});
+            }
+            continue;
+        }
+        QString key = trimmed.left(sep).trimmed();
+        QString value = trimmed.mid(sep + 1).trimmed();
+        if (key.compare(QStringLiteral("Phiếu"), Qt::CaseInsensitive) == 0) {
+            key = QObject::tr("Mã phiếu");
+        } else if (key.compare(QStringLiteral("Mượn"), Qt::CaseInsensitive) == 0) {
+            key = QObject::tr("Ngày mượn");
+        }
+        if (value.isEmpty()) continue;
+        int existing = -1;
+        for (int i = 0; i < rows.size(); ++i) {
+            if (rows[i].first.compare(key, Qt::CaseInsensitive) == 0) {
+                existing = i;
+                break;
+            }
+        }
+        if (existing >= 0) {
+            rows[existing].second = QStringLiteral("%1 | %2").arg(rows[existing].second, value);
+        } else {
+            rows.append({key, value});
+        }
+    }
+    return rows;
+}
+
 }  // namespace
 
 namespace pbl2::ui {
@@ -143,7 +191,6 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     // Modern font and light background
     setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 11pt; } QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-size: 12pt; font-weight: 700; } QLabel { font-size: 11pt; } ");
 
-    const QString requestId = bridge::toQString(report.getRequestId());
     const QString staff = bridge::toQString(report.getStaffUsername());
     const QString notes = bridge::toQString(report.getNotes()).trimmed();
 
@@ -154,17 +201,35 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-    form->addRow(makeCaption(tr("Mã yêu cầu"), this), makeValueLabel(displayOrFallback(requestId, tr("Không rõ")), this));
     form->addRow(makeCaption(tr("Nhân viên"), this), makeValueLabel(displayOrFallback(staff, tr("Không rõ")), this));
     form->addRow(makeCaption(tr("Từ ngày"), this), makeValueLabel(formatDate(bridge::toQDate(report.getFromDate())), this));
     form->addRow(makeCaption(tr("Đến ngày"), this), makeValueLabel(formatDate(bridge::toQDate(report.getToDate())), this));
     form->addRow(makeCaption(tr("Trạng thái"), this), makeValueLabel(displayOrFallback(statusText, tr("Không rõ")), this));
     form->addRow(makeCaption(tr("Ngày tạo"), this), makeValueLabel(formatDateTime(bridge::toQDateTime(report.getCreatedAt())), this));
-    form->addRow(makeCaption(tr("Số phiếu xử lý"), this), makeValueLabel(QString::number(report.getHandledLoans()), this));
-    form->addRow(makeCaption(tr("Sách mất/hư"), this), makeValueLabel(QString::number(report.getLostOrDamaged()), this));
-    form->addRow(makeCaption(tr("Độc giả quá hạn"), this), makeValueLabel(QString::number(report.getOverdueReaders()), this));
+    const auto noteFields = parseNoteFields(notes);
+    QSet<QString> existingLabels{
+        tr("Nhân viên"),
+        tr("Từ ngày"),
+        tr("Đến ngày"),
+        tr("Trạng thái"),
+        tr("Ngày tạo"),
+    };
+    for (const auto &row : noteFields) {
+        if (row.first.trimmed().isEmpty()) continue;
+        const QString normalized = row.first.trimmed().toLower();
+        bool duplicate = false;
+        for (const QString &label : existingLabels) {
+            if (label.trimmed().toLower() == normalized) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (duplicate) continue;
+        existingLabels.insert(row.first.trimmed());
+        form->addRow(makeCaption(row.first, this), makeValueLabel(row.second, this));
+    }
 
-        const auto affectedRows = parseAffectedBooks(bridge::toQString(report.getAffectedBooks()), books);
+    const auto affectedRows = parseAffectedBooks(bridge::toQString(report.getAffectedBooks()), books);
     QString affectedText;
     for (int i = 0; i < affectedRows.size(); ++i) {
         const auto &row = affectedRows[i];
@@ -177,12 +242,6 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         affectedText = tr("(Không có sách được liên kết)");
     }
     form->addRow(makeCaption(tr("Chi tiết sách"), this), makeValueLabel(affectedText, this));
-
-    auto *notesLabel = new QLabel(tr("Ghi chú"), this);
-    auto *notesViewer = new QPlainTextEdit(this);
-    notesViewer->setPlainText(notes.isEmpty() ? tr("(Không có ghi chú)") : notes);
-    notesViewer->setReadOnly(true);
-    notesViewer->setMinimumHeight(140);
 
     auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close, this);
     buttonBox->setCenterButtons(true);
@@ -197,8 +256,6 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(12);
     layout->addLayout(form);
-    layout->addWidget(notesLabel);
-    layout->addWidget(notesViewer);
     layout->addWidget(buttonBox, 0, Qt::AlignRight);
 }
 
