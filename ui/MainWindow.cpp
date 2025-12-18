@@ -133,6 +133,245 @@ QString formatCurrency(int value) {
     return viLocale.toString(value) + QStringLiteral(" VND");
 }
 
+QString buildMainWindowButtonStyles() {
+    QString s;
+
+    s += "QPushButton#bookFilterButton,"
+         "QPushButton#readerFilterButton,"
+         "QPushButton#loanFilterButton,"
+         "QPushButton#staffFilterButton,"
+         "QPushButton#reportApplyButton,"
+         "QPushButton#applyFilterButton {"
+         "  background: #2563eb;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#bookFilterButton:hover,"
+         "QPushButton#readerFilterButton:hover,"
+         "QPushButton#loanFilterButton:hover,"
+         "QPushButton#staffFilterButton:hover,"
+         "QPushButton#reportApplyButton:hover,"
+         "QPushButton#applyFilterButton:hover {"
+         "  background: #1d4ed8;"
+         "}"
+         "QPushButton#bookFilterButton:pressed,"
+         "QPushButton#readerFilterButton:pressed,"
+         "QPushButton#loanFilterButton:pressed,"
+         "QPushButton#staffFilterButton:pressed,"
+         "QPushButton#reportApplyButton:pressed,"
+         "QPushButton#applyFilterButton:pressed {"
+         "  background: #1e40af;"
+         "}";
+
+    s += "QPushButton#refreshButton,"
+         "QPushButton#bookClearButton,"
+         "QPushButton#readerClearButton,"
+         "QPushButton#loanClearButton,"
+         "QPushButton#reportClearButton,"
+         "QPushButton#staffClearButton {"
+         "  background: #64748b;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#refreshButton:hover,"
+         "QPushButton#bookClearButton:hover,"
+         "QPushButton#readerClearButton:hover,"
+         "QPushButton#loanClearButton:hover,"
+         "QPushButton#reportClearButton:hover,"
+         "QPushButton#staffClearButton:hover {"
+         "  background: #475569;"
+         "}"
+         "QPushButton#refreshButton:pressed,"
+         "QPushButton#bookClearButton:pressed,"
+         "QPushButton#readerClearButton:pressed,"
+         "QPushButton#loanClearButton:pressed,"
+         "QPushButton#reportClearButton:pressed,"
+         "QPushButton#staffClearButton:pressed {"
+         "  background: #334155;"
+         "}";
+
+    s += "QPushButton#addBookButton,"
+         "QPushButton#addReaderButton,"
+         "QPushButton#addStaffButton,"
+         "QPushButton#addAccountButton,"
+         "QPushButton#newLoanButton,"
+         "QPushButton#submitReportButton {"
+         "  background: #16a34a;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#addBookButton:hover,"
+         "QPushButton#addReaderButton:hover,"
+         "QPushButton#addStaffButton:hover,"
+         "QPushButton#addAccountButton:hover,"
+         "QPushButton#newLoanButton:hover,"
+         "QPushButton#submitReportButton:hover {"
+         "  background: #15803d;"
+         "}"
+         "QPushButton#addBookButton:pressed,"
+         "QPushButton#addReaderButton:pressed,"
+         "QPushButton#addStaffButton:pressed,"
+         "QPushButton#addAccountButton:pressed,"
+         "QPushButton#newLoanButton:pressed,"
+         "QPushButton#submitReportButton:pressed {"
+         "  background: #166534;"
+         "}";
+
+    s += "QPushButton#approveReportButton,"
+         "QPushButton#returnLoanButton,"
+         "QPushButton#saveConfigButton {"
+         "  background: #059669;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#approveReportButton:hover,"
+         "QPushButton#returnLoanButton:hover,"
+         "QPushButton#saveConfigButton:hover {"
+         "  background: #047857;"
+         "}"
+         "QPushButton#approveReportButton:pressed,"
+         "QPushButton#returnLoanButton:pressed,"
+         "QPushButton#saveConfigButton:pressed {"
+         "  background: #065f46;"
+         "}";
+
+    s += "QPushButton#editBookButton,"
+         "QPushButton#editReaderButton,"
+         "QPushButton#editStaffButton,"
+         "QPushButton#restockBookButton,"
+         "QPushButton#extendLoanButton,"
+         "QPushButton#resetPasswordButton {"
+         "  background: #7c3aed;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#editBookButton:hover,"
+         "QPushButton#editReaderButton:hover,"
+         "QPushButton#editStaffButton:hover,"
+         "QPushButton#restockBookButton:hover,"
+         "QPushButton#extendLoanButton:hover,"
+         "QPushButton#resetPasswordButton:hover {"
+         "  background: #6d28d9;"
+         "}"
+         "QPushButton#editBookButton:pressed,"
+         "QPushButton#editReaderButton:pressed,"
+         "QPushButton#editStaffButton:pressed,"
+         "QPushButton#restockBookButton:pressed,"
+         "QPushButton#extendLoanButton:pressed,"
+         "QPushButton#resetPasswordButton:pressed {"
+         "  background: #5b21b6;"
+         "}";
+
+    s += "QPushButton#toggleReaderStatusButton,"
+         "QPushButton#toggleStaffStatusButton,"
+         "QPushButton#toggleAccountButton {"
+         "  background: #0d9488;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#toggleReaderStatusButton:hover,"
+         "QPushButton#toggleStaffStatusButton:hover,"
+         "QPushButton#toggleAccountButton:hover {"
+         "  background: #0f766e;"
+         "}"
+         "QPushButton#toggleReaderStatusButton:pressed,"
+         "QPushButton#toggleStaffStatusButton:pressed,"
+         "QPushButton#toggleAccountButton:pressed {"
+         "  background: #115e59;"
+         "}";
+
+    s += "QPushButton#lostLoanButton,"
+         "QPushButton#damageLoanButton {"
+         "  background: #f59e0b;"
+         "  color: #1f2937;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#lostLoanButton:hover,"
+         "QPushButton#damageLoanButton:hover {"
+         "  background: #d97706;"
+         "}"
+         "QPushButton#lostLoanButton:pressed,"
+         "QPushButton#damageLoanButton:pressed {"
+         "  background: #b45309;"
+         "}";
+
+    s += "QPushButton#deleteBookButton,"
+         "QPushButton#deleteReaderButton,"
+         "QPushButton#deleteLoanButton,"
+         "QPushButton#deleteStaffButton,"
+         "QPushButton#deleteAccountButton,"
+         "QPushButton#deleteReportButton,"
+         "QPushButton#rejectReportButton,"
+         "QPushButton#logoutButton,"
+         "QPushButton#exitButton {"
+         "  background: #dc2626;"
+         "  color: #ffffff;"
+         "  border: none;"
+         "  border-radius: 8px;"
+         "  padding: 6px 14px;"
+         "  font-weight: 600;"
+         "}"
+         "QPushButton#deleteBookButton:hover,"
+         "QPushButton#deleteReaderButton:hover,"
+         "QPushButton#deleteLoanButton:hover,"
+         "QPushButton#deleteStaffButton:hover,"
+         "QPushButton#deleteAccountButton:hover,"
+         "QPushButton#deleteReportButton:hover,"
+         "QPushButton#rejectReportButton:hover,"
+         "QPushButton#logoutButton:hover,"
+         "QPushButton#exitButton:hover {"
+         "  background: #b91c1c;"
+         "}"
+         "QPushButton#deleteBookButton:pressed,"
+         "QPushButton#deleteReaderButton:pressed,"
+         "QPushButton#deleteLoanButton:pressed,"
+         "QPushButton#deleteStaffButton:pressed,"
+         "QPushButton#deleteAccountButton:pressed,"
+         "QPushButton#deleteReportButton:pressed,"
+         "QPushButton#rejectReportButton:pressed,"
+         "QPushButton#logoutButton:pressed,"
+         "QPushButton#exitButton:pressed {"
+         "  background: #991b1b;"
+         "}";
+
+    return s;
+}
+
+QString detailPrimaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #16a34a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #15803d; }"
+        "QPushButton:pressed { background: #166534; }");
+}
+
+QString detailSecondaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #64748b; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #475569; }"
+        "QPushButton:pressed { background: #334155; }");
+}
+
 class CardListDelegate final : public QStyledItemDelegate {
 public:
     using QStyledItemDelegate::QStyledItemDelegate;
@@ -149,8 +388,8 @@ public:
     const bool selected = option.state & QStyle::State_Selected;
     // Reduce outer margins slightly to make cards more compact
     const QRect outer = option.rect.adjusted(4, 2, -4, -2);
-    const QColor background = selected ? QColor(0xE6, 0xE9, 0xEB) : QColor(0xE2, 0xE2, 0xE2);
-    QColor border = selected ? QColor(0x95, 0xA5, 0xB0) : QColor(0xD0, 0xD5, 0xDA);
+    const QColor background = selected ? QColor(0xC2, 0xD9, 0xFF) : QColor(0xE2, 0xE2, 0xE2);
+    QColor border = selected ? QColor(0x2F, 0x6A, 0xD0) : QColor(0xD0, 0xD5, 0xDA);
 
         painter->setPen(border);
         painter->setBrush(background);
@@ -167,10 +406,6 @@ public:
     const int coverTop = inner.top() + (inner.height() - coverHeight) / 2;
     QRect coverFrame(inner.left(), coverTop, coverWidth, coverHeight);
     QRect coverRect = coverFrame.adjusted(6, 6, -6, -6);
-    // Draw a subtle frame so the cover stands out.
-    painter->setPen(QPen(QColor(0x70, 0x78, 0x80), 2));
-    painter->setBrush(QColor(0xF7, 0xF7, 0xF7));
-    painter->drawRoundedRect(coverFrame, 6, 6);
     if (hasIcon) {
         QPixmap pm = icon.pixmap(coverRect.size());
         pm = pm.scaled(coverRect.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -182,9 +417,6 @@ public:
     } else {
         painter->fillRect(coverRect, QColor(0x3A, 0x32, 0x32));
     }
-    painter->setPen(QPen(QColor(0x70, 0x78, 0x80), 1));
-    painter->setBrush(Qt::NoBrush);
-    painter->drawRoundedRect(coverRect, 4, 4);
     // Shift text area to the right of the cover.
     const int gap = 18;
     inner.setLeft(inner.left() + coverWidth + gap);
@@ -360,8 +592,8 @@ public:
 
         const bool selected = option.state & QStyle::State_Selected;
         const QRect outer = option.rect.adjusted(4, 2, -4, -2);
-        const QColor background = selected ? QColor(0xE6, 0xE9, 0xEB) : QColor(0xF1, 0xF5, 0xF9);
-        QColor border = selected ? QColor(0x95, 0xA5, 0xB0) : QColor(0xD0, 0xD5, 0xDA);
+        const QColor background = selected ? QColor(0xC2, 0xD9, 0xFF) : QColor(0xF1, 0xF5, 0xF9);
+        QColor border = selected ? QColor(0x2F, 0x6A, 0xD0) : QColor(0xD0, 0xD5, 0xDA);
 
         painter->setPen(border);
         painter->setBrush(background);
@@ -654,7 +886,9 @@ void configureCardListWidget(QListWidget *list) {
         "  margin: 6px 4px;"
         "}"
         "QListWidget::item:selected {"
-        "  background: transparent;"
+        "  background: #cfe3ff;"
+        "  border: 1px solid #4f8fe6;"
+        "  border-radius: 8px;"
         "}");
 
     // Delegate will be set per-tab after configuration.
@@ -790,6 +1024,8 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::setupUi() {
     ui->setupUi(this);
+    const QString baseStyle = styleSheet();
+    setStyleSheet(baseStyle + buildMainWindowButtonStyles());
 
     if (ui->centralLayout) {
         ui->centralLayout->setStretch(0, 0);
@@ -1391,10 +1627,6 @@ void MainWindow::configureReportsTab() {
     if (ui->rejectReportButton) ui->rejectReportButton->setVisible(false);
     if (ui->deleteReportButton) {
         ui->deleteReportButton->setVisible(staffRole || adminRole);
-        ui->deleteReportButton->setStyleSheet(QStringLiteral(
-            "QPushButton { background: #dc2626; color: #fff; font-weight: 700; border-radius: 8px; padding: 8px 16px; }"
-            "QPushButton:hover { background: #b91c1c; }"
-            "QPushButton:pressed { background: #991b1b; }"));
         connect(ui->deleteReportButton, &QPushButton::clicked, [this]() { handleDeleteReport(); });
     }
 }
@@ -1689,18 +1921,15 @@ void MainWindow::showBookDetails(const model::Book &book) {
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
-    buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { font-weight: 600; }"
-        "QDialogButtonBox QPushButton:default { background: #0ea5e9; color: white; }"));
 
     QPushButton *rentButton = nullptr;
     QPushButton *closeButton = buttons->button(QDialogButtonBox::Close);
     if (staffRole) {
         rentButton = buttons->addButton(tr("Thuê"), QDialogButtonBox::ActionRole);
         rentButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        rentButton->setMinimumSize(140, 44);
-        rentButton->setMaximumWidth(180);
-        rentButton->setStyleSheet(QStringLiteral("min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt;"));
+        rentButton->setMinimumSize(120, 38);
+        rentButton->setMaximumWidth(160);
+        rentButton->setStyleSheet(detailPrimaryActionStyle());
         rentButton->setDefault(false);
         connect(rentButton, &QPushButton::clicked, &dlg, [this, &dlg, bookId]() {
             dlg.accept();
@@ -1712,10 +1941,10 @@ void MainWindow::showBookDetails(const model::Book &book) {
     }
     if (closeButton) {
         closeButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        closeButton->setMinimumSize(140, 44);
-        closeButton->setMaximumWidth(180);
+        closeButton->setMinimumSize(120, 38);
+        closeButton->setMaximumWidth(160);
         closeButton->setDefault(true);
-        closeButton->setStyleSheet(QStringLiteral("min-width: 140px; min-height: 44px; font-weight: 700; font-size: 12pt;"));
+        closeButton->setStyleSheet(detailSecondaryActionStyle());
     }
     connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
 
@@ -1767,15 +1996,12 @@ void MainWindow::showReaderDetails(const model::Reader &reader) const {
     root->addLayout(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
-    buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { min-width: 170px; min-height: 48px; font-weight: 700; font-size: 12pt; background: #0ea5e9; color: white; border-radius: 8px; }"
-        "QDialogButtonBox QPushButton:hover { background: #0284c7; }"
-        "QDialogButtonBox QPushButton:pressed { background: #0369a1; }"));
     QPushButton *closeButton = buttons->button(QDialogButtonBox::Close);
     if (closeButton) {
-        closeButton->setMinimumSize(170, 48);
-        closeButton->setMaximumWidth(220);
+        closeButton->setMinimumSize(140, 40);
+        closeButton->setMaximumWidth(180);
         closeButton->setDefault(true);
+        closeButton->setStyleSheet(detailSecondaryActionStyle());
     }
     connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
     root->addWidget(buttons, 0, Qt::AlignRight);
@@ -1818,16 +2044,13 @@ void MainWindow::showStaffDetails(const model::Staff &staff) const {
     root->addLayout(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
-    buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { min-width: 170px; min-height: 48px; font-weight: 700; font-size: 12pt; background: #0ea5e9; color: white; border-radius: 8px; }"
-        "QDialogButtonBox QPushButton:hover { background: #0284c7; }"
-        "QDialogButtonBox QPushButton:pressed { background: #0369a1; }"));
     QPushButton *closeButton = buttons->button(QDialogButtonBox::Close);
     if (closeButton) {
         closeButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        closeButton->setMinimumSize(170, 48);
-        closeButton->setMaximumWidth(220);
+        closeButton->setMinimumSize(140, 40);
+        closeButton->setMaximumWidth(180);
         closeButton->setDefault(true);
+        closeButton->setStyleSheet(detailSecondaryActionStyle());
     }
     connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
     root->addWidget(buttons, 0, Qt::AlignRight);
@@ -3847,7 +4070,7 @@ void MainWindow::handleViewLoanReceipt() {
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setSelectionMode(QAbstractItemView::NoSelection);
     table->setAlternatingRowColors(true);
-    table->setFixedHeight(120);
+    table->setFixedHeight(96);
     table->setStyleSheet(
         "QTableWidget {"
         " border: 1px solid #8ea0d5;"
@@ -3870,19 +4093,17 @@ void MainWindow::handleViewLoanReceipt() {
     table->setItem(0, 3, new QTableWidgetItem(bookPublisher));
     table->setItem(0, 4, new QTableWidgetItem(noteText));
     table->resizeRowsToContents();
+    table->setRowHeight(0, 44);
 
     root->addWidget(table);
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
     buttons->setCenterButtons(true);
-    buttons->setStyleSheet(QStringLiteral(
-        "QDialogButtonBox QPushButton { min-width: 170px; min-height: 48px; font-weight: 700; font-size: 12pt; background: #0ea5e9; color: white; border-radius: 8px; }"
-        "QDialogButtonBox QPushButton:hover { background: #0284c7; }"
-        "QDialogButtonBox QPushButton:pressed { background: #0369a1; }"));
     if (auto *closeButton = buttons->button(QDialogButtonBox::Close)) {
-        closeButton->setMinimumSize(170, 48);
-        closeButton->setMaximumWidth(220);
+        closeButton->setMinimumSize(140, 40);
+        closeButton->setMaximumWidth(180);
         closeButton->setDefault(true);
+        closeButton->setStyleSheet(detailSecondaryActionStyle());
     }
     connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::accept);
     root->addWidget(buttons, 0, Qt::AlignRight);

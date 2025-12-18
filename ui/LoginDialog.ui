@@ -16,6 +16,25 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
+  <widget class="QLabel" name="logoLabel">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>30</y>
+     <width>60</width>
+     <height>60</height>
+    </rect>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="ui/resources/icons/icons.qrc">:/icons/login.gif</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
   <widget class="QLabel" name="titleLabel">
    <property name="geometry">
     <rect>
@@ -189,6 +208,8 @@
    </item>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources/icons/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

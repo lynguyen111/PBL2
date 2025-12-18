@@ -11,6 +11,7 @@
 #include <QCompleter>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QVariant>
 #include <QVBoxLayout>
 
@@ -47,6 +48,20 @@ QString displayBook(const Book &book) {
     const QString bookId = pbl2::bridge::toQString(book.getId());
     const QString title = pbl2::bridge::toQString(book.getTitle());
     return QStringLiteral("%1 - %2").arg(bookId, title);
+}
+
+QString primaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #16a34a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #15803d; }"
+        "QPushButton:pressed { background: #166534; }");
+}
+
+QString dangerActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #dc2626; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #b91c1c; }"
+        "QPushButton:pressed { background: #991b1b; }");
 }
 
 }
@@ -129,6 +144,12 @@ namespace pbl2::ui {
         formGroup->setLayout(form);
 
         buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+        if (auto *okBtn = buttonBox->button(QDialogButtonBox::Ok)) {
+            okBtn->setStyleSheet(primaryActionStyle());
+        }
+        if (auto *cancelBtn = buttonBox->button(QDialogButtonBox::Cancel)) {
+            cancelBtn->setStyleSheet(dangerActionStyle());
+        }
         connect(buttonBox, &QDialogButtonBox::accepted, this, &LoanDialog::accept);
         connect(buttonBox, &QDialogButtonBox::rejected, this, &LoanDialog::reject);
 

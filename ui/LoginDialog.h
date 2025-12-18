@@ -12,6 +12,7 @@
 class QLabel;
 class QLineEdit;
 class QPushButton;
+class QMovie;
 
 namespace Ui {
 class LoginDialog;
@@ -48,10 +49,10 @@ private:
     QPushButton *loginButton{nullptr};
     QPushButton *exitButton{nullptr};
     QComboBox *roleComboBox{nullptr};
+    std::unique_ptr<QMovie> logoMovie;
     model::Account authenticatedAccount;
     bool exitRequestedFlag{false};
 };
 
 }  // namespace pbl2::ui
-
 

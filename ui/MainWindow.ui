@@ -1364,13 +1364,11 @@ QGroupBox#statsFilterGroup::title {
 #statsFilterGroup QComboBox,
 #statsFilterGroup QDateEdit,
 #statsFilterGroup QPushButton {
-    background: #ffffff;
     border: none;
     border-radius: 8px;
     padding: 6px 10px;
-    color: #0f172a;
 }
-#statsFilterGroup QPushButton:hover { background: #e5f1ff; }</string>
+</string>
        </property>
        <attribute name="title">
         <string>Thống kê</string>

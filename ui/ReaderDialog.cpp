@@ -18,6 +18,22 @@
 
 using namespace std;
 
+namespace {
+QString primaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #16a34a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #15803d; }"
+        "QPushButton:pressed { background: #166534; }");
+}
+
+QString dangerActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #dc2626; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #b91c1c; }"
+        "QPushButton:pressed { background: #991b1b; }");
+}
+}
+
 namespace pbl2::ui {
 
 ReaderDialog::ReaderDialog(QWidget *parent) : QDialog(parent) {
@@ -101,9 +117,11 @@ ReaderDialog::ReaderDialog(QWidget *parent) : QDialog(parent) {
     if (auto *okBtn = buttonBox->button(QDialogButtonBox::Ok)) {
         okBtn->setMinimumSize(120, 40);
         okBtn->setDefault(true);
+        okBtn->setStyleSheet(primaryActionStyle());
     }
     if (auto *cancelBtn = buttonBox->button(QDialogButtonBox::Cancel)) {
         cancelBtn->setMinimumSize(120, 40);
+        cancelBtn->setStyleSheet(dangerActionStyle());
     }
     connect(buttonBox, &QDialogButtonBox::accepted, this, &ReaderDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &ReaderDialog::reject);

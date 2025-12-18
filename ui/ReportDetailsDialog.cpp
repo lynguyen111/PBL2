@@ -31,6 +31,13 @@ QString formatDateTime(const QDateTime &value) {
     return value.toString(QStringLiteral("yyyy-MM-dd hh:mm"));
 }
 
+QString detailSecondaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #64748b; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #475569; }"
+        "QPushButton:pressed { background: #334155; }");
+}
+
 QLabel *makeCaption(const QString &text, QWidget *parent) {
     auto *label = new QLabel(text, parent);
     label->setMinimumWidth(120);
@@ -246,9 +253,10 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close, this);
     buttonBox->setCenterButtons(true);
     if (auto *closeBtn = buttonBox->button(QDialogButtonBox::Close)) {
-        closeBtn->setMinimumSize(140, 44);
-        closeBtn->setMaximumWidth(180);
+        closeBtn->setMinimumSize(120, 38);
+        closeBtn->setMaximumWidth(160);
         closeBtn->setDefault(true);
+        closeBtn->setStyleSheet(detailSecondaryActionStyle());
     }
     connect(buttonBox, &QDialogButtonBox::rejected, this, &ReportDetailsDialog::reject);
 

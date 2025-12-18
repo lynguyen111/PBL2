@@ -22,6 +22,7 @@ QT_BEGIN_NAMESPACE
 class Ui_LoginDialog
 {
 public:
+    QLabel *logoLabel;
     QLabel *titleLabel;
     QLabel *errorLabel;
     QPushButton *loginButton;
@@ -38,6 +39,12 @@ public:
             LoginDialog->setObjectName("LoginDialog");
         LoginDialog->resize(567, 665);
         LoginDialog->setStyleSheet(QString::fromUtf8(""));
+        logoLabel = new QLabel(LoginDialog);
+        logoLabel->setObjectName("logoLabel");
+        logoLabel->setGeometry(QRect(250, 30, 60, 60));
+        logoLabel->setPixmap(QPixmap(QString::fromUtf8(":/icons/login.gif")));
+        logoLabel->setScaledContents(true);
+        logoLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
         titleLabel = new QLabel(LoginDialog);
         titleLabel->setObjectName("titleLabel");
         titleLabel->setGeometry(QRect(30, 80, 521, 91));

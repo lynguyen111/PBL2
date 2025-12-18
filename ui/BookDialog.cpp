@@ -27,6 +27,27 @@ QString cleanId(const QString &value) {
     return id.replace(' ', '_');
 }
 
+QString primaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #16a34a; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #15803d; }"
+        "QPushButton:pressed { background: #166534; }");
+}
+
+QString dangerActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #dc2626; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #b91c1c; }"
+        "QPushButton:pressed { background: #991b1b; }");
+}
+
+QString secondaryActionStyle() {
+    return QStringLiteral(
+        "QPushButton { background: #2563eb; color: #ffffff; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; }"
+        "QPushButton:hover { background: #1d4ed8; }"
+        "QPushButton:pressed { background: #1e40af; }");
+}
+
     QStringList defaultGenres() {
     return {
         QStringLiteral("Tất cả"),
@@ -92,6 +113,7 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     coverLabel->setStyleSheet("border: 1px solid #ccc; background: #eee; margin-bottom: 8px;");
     coverLabel->setAlignment(Qt::AlignCenter);
     chooseCoverButton = new QPushButton(tr("Chọn ảnh bìa"), this);
+    chooseCoverButton->setStyleSheet(secondaryActionStyle());
     connect(chooseCoverButton, &QPushButton::clicked, this, [this]() {
         QString file = QFileDialog::getOpenFileName(this, tr("Chọn ảnh bìa"), QString(), "Images (*.png *.jpg *.jpeg *.bmp)");
         if (!file.isEmpty()) {
@@ -145,9 +167,11 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     if (auto *okBtn = buttonBox->button(QDialogButtonBox::Ok)) {
         okBtn->setMinimumSize(120, 40);
         okBtn->setDefault(true);
+        okBtn->setStyleSheet(primaryActionStyle());
     }
     if (auto *cancelBtn = buttonBox->button(QDialogButtonBox::Cancel)) {
         cancelBtn->setMinimumSize(120, 40);
+        cancelBtn->setStyleSheet(dangerActionStyle());
     }
     connect(buttonBox, &QDialogButtonBox::accepted, this, &BookDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &BookDialog::reject);

@@ -1,5 +1,6 @@
 #include "LoginDialog.h"
 
+#include <QMovie>
 #include <QVBoxLayout>
 
 #include "QtBridge.h"
@@ -20,7 +21,7 @@ LoginDialog::LoginDialog(service::AccountService &accountService, QWidget *paren
     const QFont font("Times New Roman", 18);
     setFont(font);
 
-   ui->setupUi(this);
+    ui->setupUi(this);
     // setStyleSheet đã bị xoá để dùng font-size cho tiêu đề trực tiếp trong LoginDialog.ui
     usernameEdit = ui->usernameEdit;
     passwordEdit = ui->passwordEdit;
@@ -28,6 +29,17 @@ LoginDialog::LoginDialog(service::AccountService &accountService, QWidget *paren
     loginButton = ui->loginButton;
     exitButton = ui->exitButton;
     roleComboBox = ui->roleComboBox;
+    auto *logoLabel = ui->logoLabel;
+
+    if (logoLabel) {
+        logoMovie = std::make_unique<QMovie>(QStringLiteral(":/icons/login.gif"));
+        logoMovie->setCacheMode(QMovie::CacheAll);
+        if (logoLabel->size().isValid()) {
+            logoMovie->setScaledSize(logoLabel->size());
+        }
+        logoLabel->setMovie(logoMovie.get());
+        logoMovie->start();
+    }
 
     if (usernameEdit) usernameEdit->setMinimumHeight(32);
     if (passwordEdit) passwordEdit->setMinimumHeight(32);

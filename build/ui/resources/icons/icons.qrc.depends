@@ -12,5 +12,6 @@
         <file>account.png</file>
         <file>setting.png</file>
         <file>logomain.png</file>
+        <file>login.gif</file>
     </qresource>
 </RCC>

@@ -49,6 +49,7 @@ public:
     QPushButton *logoutButton;
     QTabWidget *tabs;
     QWidget *homeTab;
+    QVBoxLayout *homeLayout;
     QLabel *homeTitleLabel;
     QFrame *homeSummaryFrame;
     QGridLayout *homeSummaryLayout;
@@ -285,18 +286,28 @@ public:
         homeTab->setStyleSheet(QString::fromUtf8("QWidget#homeTab {\n"
 "    background-color: #f8fafc;\n"
 "}"));
+        homeLayout = new QVBoxLayout(homeTab);
+        homeLayout->setSpacing(12);
+        homeLayout->setObjectName("homeLayout");
+        homeLayout->setContentsMargins(18, 18, 18, 18);
         homeTitleLabel = new QLabel(homeTab);
         homeTitleLabel->setObjectName("homeTitleLabel");
-        homeTitleLabel->setGeometry(QRect(280, 10, 471, 26));
         QFont font1;
         font1.setFamilies({QString::fromUtf8("Academy Engraved LET")});
         font1.setPointSize(18);
         font1.setBold(false);
         homeTitleLabel->setFont(font1);
         homeTitleLabel->setAlignment(Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop);
+
+        homeLayout->addWidget(homeTitleLabel);
+
         homeSummaryFrame = new QFrame(homeTab);
         homeSummaryFrame->setObjectName("homeSummaryFrame");
-        homeSummaryFrame->setGeometry(QRect(70, 50, 931, 67));
+        QSizePolicy sizePolicy3(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Fixed);
+        sizePolicy3.setHorizontalStretch(0);
+        sizePolicy3.setVerticalStretch(0);
+        sizePolicy3.setHeightForWidth(homeSummaryFrame->sizePolicy().hasHeightForWidth());
+        homeSummaryFrame->setSizePolicy(sizePolicy3);
         homeSummaryFrame->setStyleSheet(QString::fromUtf8("QFrame#homeSummaryFrame {\n"
 "  background: rgba(255,255,255,0.7);\n"
 "  border-radius: 10px;\n"
@@ -361,13 +372,24 @@ public:
 
         homeSummaryLayout->addWidget(homeOverdueLabel, 1, 3, 1, 1);
 
+
+        homeLayout->addWidget(homeSummaryFrame);
+
         homeImageLabel = new QLabel(homeTab);
         homeImageLabel->setObjectName("homeImageLabel");
-        homeImageLabel->setGeometry(QRect(18, 447, 16, 16));
+        QSizePolicy sizePolicy4(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+        sizePolicy4.setHorizontalStretch(0);
+        sizePolicy4.setVerticalStretch(1);
+        sizePolicy4.setHeightForWidth(homeImageLabel->sizePolicy().hasHeightForWidth());
+        homeImageLabel->setSizePolicy(sizePolicy4);
+        homeImageLabel->setMinimumSize(QSize(0, 600));
+        homeImageLabel->setMaximumSize(QSize(16777215, 16777215));
         homeImageLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        homeLayout->addWidget(homeImageLabel);
+
         homeHintLabel = new QLabel(homeTab);
         homeHintLabel->setObjectName("homeHintLabel");
-        homeHintLabel->setGeometry(QRect(20, 660, 1017, 52));
         homeHintLabel->setStyleSheet(QString::fromUtf8("background: rgba(255,255,255,0.85);\n"
 "padding: 10px 14px;\n"
 "border-radius: 10px;\n"
@@ -375,6 +397,9 @@ public:
 "color: #0f172a;"));
         homeHintLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
         homeHintLabel->setWordWrap(true);
+
+        homeLayout->addWidget(homeHintLabel);
+
         tabs->addTab(homeTab, QString());
         booksTab = new QWidget();
         booksTab->setObjectName("booksTab");
@@ -400,11 +425,11 @@ public:
         booksFilterRow->setObjectName("booksFilterRow");
         bookSearchEdit = new QLineEdit(booksFilterGroup);
         bookSearchEdit->setObjectName("bookSearchEdit");
-        QSizePolicy sizePolicy3(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
-        sizePolicy3.setHorizontalStretch(0);
-        sizePolicy3.setVerticalStretch(0);
-        sizePolicy3.setHeightForWidth(bookSearchEdit->sizePolicy().hasHeightForWidth());
-        bookSearchEdit->setSizePolicy(sizePolicy3);
+        QSizePolicy sizePolicy5(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Fixed);
+        sizePolicy5.setHorizontalStretch(0);
+        sizePolicy5.setVerticalStretch(0);
+        sizePolicy5.setHeightForWidth(bookSearchEdit->sizePolicy().hasHeightForWidth());
+        bookSearchEdit->setSizePolicy(sizePolicy5);
         bookSearchEdit->setMinimumSize(QSize(360, 40));
         bookSearchEdit->setMaximumSize(QSize(500, 40));
 
@@ -412,24 +437,24 @@ public:
 
         bookStatusFilter = new QComboBox(booksFilterGroup);
         bookStatusFilter->setObjectName("bookStatusFilter");
-        sizePolicy3.setHeightForWidth(bookStatusFilter->sizePolicy().hasHeightForWidth());
-        bookStatusFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(bookStatusFilter->sizePolicy().hasHeightForWidth());
+        bookStatusFilter->setSizePolicy(sizePolicy5);
         bookStatusFilter->setMaximumSize(QSize(220, 40));
 
         booksFilterRow->addWidget(bookStatusFilter);
 
         bookFilterButton = new QPushButton(booksFilterGroup);
         bookFilterButton->setObjectName("bookFilterButton");
-        sizePolicy3.setHeightForWidth(bookFilterButton->sizePolicy().hasHeightForWidth());
-        bookFilterButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(bookFilterButton->sizePolicy().hasHeightForWidth());
+        bookFilterButton->setSizePolicy(sizePolicy5);
         bookFilterButton->setMinimumSize(QSize(120, 36));
 
         booksFilterRow->addWidget(bookFilterButton);
 
         bookClearButton = new QPushButton(booksFilterGroup);
         bookClearButton->setObjectName("bookClearButton");
-        sizePolicy3.setHeightForWidth(bookClearButton->sizePolicy().hasHeightForWidth());
-        bookClearButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(bookClearButton->sizePolicy().hasHeightForWidth());
+        bookClearButton->setSizePolicy(sizePolicy5);
         bookClearButton->setMinimumSize(QSize(120, 36));
 
         booksFilterRow->addWidget(bookClearButton);
@@ -504,8 +529,8 @@ public:
         readersFilterLayout->setContentsMargins(18, 18, 18, 18);
         readerSearchEdit = new QLineEdit(readersFilterGroup);
         readerSearchEdit->setObjectName("readerSearchEdit");
-        sizePolicy3.setHeightForWidth(readerSearchEdit->sizePolicy().hasHeightForWidth());
-        readerSearchEdit->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(readerSearchEdit->sizePolicy().hasHeightForWidth());
+        readerSearchEdit->setSizePolicy(sizePolicy5);
         readerSearchEdit->setMinimumSize(QSize(360, 40));
         readerSearchEdit->setMaximumSize(QSize(500, 40));
 
@@ -513,24 +538,24 @@ public:
 
         readerStatusFilter = new QComboBox(readersFilterGroup);
         readerStatusFilter->setObjectName("readerStatusFilter");
-        sizePolicy3.setHeightForWidth(readerStatusFilter->sizePolicy().hasHeightForWidth());
-        readerStatusFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(readerStatusFilter->sizePolicy().hasHeightForWidth());
+        readerStatusFilter->setSizePolicy(sizePolicy5);
         readerStatusFilter->setMaximumSize(QSize(220, 40));
 
         readersFilterLayout->addWidget(readerStatusFilter);
 
         readerFilterButton = new QPushButton(readersFilterGroup);
         readerFilterButton->setObjectName("readerFilterButton");
-        sizePolicy3.setHeightForWidth(readerFilterButton->sizePolicy().hasHeightForWidth());
-        readerFilterButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(readerFilterButton->sizePolicy().hasHeightForWidth());
+        readerFilterButton->setSizePolicy(sizePolicy5);
         readerFilterButton->setMinimumSize(QSize(120, 36));
 
         readersFilterLayout->addWidget(readerFilterButton);
 
         readerClearButton = new QPushButton(readersFilterGroup);
         readerClearButton->setObjectName("readerClearButton");
-        sizePolicy3.setHeightForWidth(readerClearButton->sizePolicy().hasHeightForWidth());
-        readerClearButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(readerClearButton->sizePolicy().hasHeightForWidth());
+        readerClearButton->setSizePolicy(sizePolicy5);
         readerClearButton->setMinimumSize(QSize(120, 36));
 
         readersFilterLayout->addWidget(readerClearButton);
@@ -602,8 +627,8 @@ public:
         loansFilterLayout->setContentsMargins(18, 18, 18, 18);
         loanSearchEdit = new QLineEdit(loansFilterGroup);
         loanSearchEdit->setObjectName("loanSearchEdit");
-        sizePolicy3.setHeightForWidth(loanSearchEdit->sizePolicy().hasHeightForWidth());
-        loanSearchEdit->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(loanSearchEdit->sizePolicy().hasHeightForWidth());
+        loanSearchEdit->setSizePolicy(sizePolicy5);
         loanSearchEdit->setMinimumSize(QSize(360, 40));
         loanSearchEdit->setMaximumSize(QSize(500, 40));
 
@@ -611,24 +636,24 @@ public:
 
         loanStatusFilter = new QComboBox(loansFilterGroup);
         loanStatusFilter->setObjectName("loanStatusFilter");
-        sizePolicy3.setHeightForWidth(loanStatusFilter->sizePolicy().hasHeightForWidth());
-        loanStatusFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(loanStatusFilter->sizePolicy().hasHeightForWidth());
+        loanStatusFilter->setSizePolicy(sizePolicy5);
         loanStatusFilter->setMaximumSize(QSize(220, 40));
 
         loansFilterLayout->addWidget(loanStatusFilter, 0, 1, 1, 1);
 
         loanFilterButton = new QPushButton(loansFilterGroup);
         loanFilterButton->setObjectName("loanFilterButton");
-        sizePolicy3.setHeightForWidth(loanFilterButton->sizePolicy().hasHeightForWidth());
-        loanFilterButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(loanFilterButton->sizePolicy().hasHeightForWidth());
+        loanFilterButton->setSizePolicy(sizePolicy5);
         loanFilterButton->setMinimumSize(QSize(120, 36));
 
         loansFilterLayout->addWidget(loanFilterButton, 0, 2, 1, 1);
 
         loanClearButton = new QPushButton(loansFilterGroup);
         loanClearButton->setObjectName("loanClearButton");
-        sizePolicy3.setHeightForWidth(loanClearButton->sizePolicy().hasHeightForWidth());
-        loanClearButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(loanClearButton->sizePolicy().hasHeightForWidth());
+        loanClearButton->setSizePolicy(sizePolicy5);
         loanClearButton->setMinimumSize(QSize(120, 36));
 
         loansFilterLayout->addWidget(loanClearButton, 0, 3, 1, 1);
@@ -710,8 +735,8 @@ public:
         reportsFilterLayout->setContentsMargins(18, 18, 18, 18);
         reportStaffFilter = new QLineEdit(reportsFilterGroup);
         reportStaffFilter->setObjectName("reportStaffFilter");
-        sizePolicy3.setHeightForWidth(reportStaffFilter->sizePolicy().hasHeightForWidth());
-        reportStaffFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(reportStaffFilter->sizePolicy().hasHeightForWidth());
+        reportStaffFilter->setSizePolicy(sizePolicy5);
         reportStaffFilter->setMinimumSize(QSize(360, 36));
         reportStaffFilter->setMaximumSize(QSize(500, 40));
 
@@ -719,8 +744,8 @@ public:
 
         reportFromFilter = new QDateEdit(reportsFilterGroup);
         reportFromFilter->setObjectName("reportFromFilter");
-        sizePolicy3.setHeightForWidth(reportFromFilter->sizePolicy().hasHeightForWidth());
-        reportFromFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(reportFromFilter->sizePolicy().hasHeightForWidth());
+        reportFromFilter->setSizePolicy(sizePolicy5);
         reportFromFilter->setMaximumSize(QSize(180, 36));
         reportFromFilter->setCalendarPopup(true);
 
@@ -728,8 +753,8 @@ public:
 
         reportToFilter = new QDateEdit(reportsFilterGroup);
         reportToFilter->setObjectName("reportToFilter");
-        sizePolicy3.setHeightForWidth(reportToFilter->sizePolicy().hasHeightForWidth());
-        reportToFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(reportToFilter->sizePolicy().hasHeightForWidth());
+        reportToFilter->setSizePolicy(sizePolicy5);
         reportToFilter->setMaximumSize(QSize(180, 36));
         reportToFilter->setCalendarPopup(true);
 
@@ -737,16 +762,16 @@ public:
 
         reportApplyButton = new QPushButton(reportsFilterGroup);
         reportApplyButton->setObjectName("reportApplyButton");
-        sizePolicy3.setHeightForWidth(reportApplyButton->sizePolicy().hasHeightForWidth());
-        reportApplyButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(reportApplyButton->sizePolicy().hasHeightForWidth());
+        reportApplyButton->setSizePolicy(sizePolicy5);
         reportApplyButton->setMinimumSize(QSize(110, 36));
 
         reportsFilterLayout->addWidget(reportApplyButton, 0, 3, 1, 1);
 
         reportClearButton = new QPushButton(reportsFilterGroup);
         reportClearButton->setObjectName("reportClearButton");
-        sizePolicy3.setHeightForWidth(reportClearButton->sizePolicy().hasHeightForWidth());
-        reportClearButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(reportClearButton->sizePolicy().hasHeightForWidth());
+        reportClearButton->setSizePolicy(sizePolicy5);
         reportClearButton->setMinimumSize(QSize(110, 36));
 
         reportsFilterLayout->addWidget(reportClearButton, 0, 4, 1, 1);
@@ -821,13 +846,11 @@ public:
 "#statsFilterGroup QComboBox,\n"
 "#statsFilterGroup QDateEdit,\n"
 "#statsFilterGroup QPushButton {\n"
-"    background: #ffffff;\n"
 "    border: none;\n"
 "    border-radius: 8px;\n"
 "    padding: 6px 10px;\n"
-"    color: #0f172a;\n"
 "}\n"
-"#statsFilterGroup QPushButton:hover { background: #e5f1ff; }"));
+""));
         statsTabOuterLayout = new QVBoxLayout(statsTab);
         statsTabOuterLayout->setSpacing(0);
         statsTabOuterLayout->setObjectName("statsTabOuterLayout");
@@ -838,11 +861,11 @@ public:
         statsTabLayout->setContentsMargins(12, 12, 12, 12);
         statsFilterGroup = new QGroupBox(statsTab);
         statsFilterGroup->setObjectName("statsFilterGroup");
-        QSizePolicy sizePolicy4(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Maximum);
-        sizePolicy4.setHorizontalStretch(0);
-        sizePolicy4.setVerticalStretch(0);
-        sizePolicy4.setHeightForWidth(statsFilterGroup->sizePolicy().hasHeightForWidth());
-        statsFilterGroup->setSizePolicy(sizePolicy4);
+        QSizePolicy sizePolicy6(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Maximum);
+        sizePolicy6.setHorizontalStretch(0);
+        sizePolicy6.setVerticalStretch(0);
+        sizePolicy6.setHeightForWidth(statsFilterGroup->sizePolicy().hasHeightForWidth());
+        statsFilterGroup->setSizePolicy(sizePolicy6);
         statsFilterLayout = new QHBoxLayout(statsFilterGroup);
         statsFilterLayout->setSpacing(12);
         statsFilterLayout->setObjectName("statsFilterLayout");
@@ -912,8 +935,8 @@ public:
         staffsFilterLayout->setContentsMargins(18, 18, 18, 18);
         staffSearchEdit = new QLineEdit(staffsFilterGroup);
         staffSearchEdit->setObjectName("staffSearchEdit");
-        sizePolicy3.setHeightForWidth(staffSearchEdit->sizePolicy().hasHeightForWidth());
-        staffSearchEdit->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(staffSearchEdit->sizePolicy().hasHeightForWidth());
+        staffSearchEdit->setSizePolicy(sizePolicy5);
         staffSearchEdit->setMinimumSize(QSize(360, 40));
         staffSearchEdit->setMaximumSize(QSize(500, 40));
 
@@ -921,24 +944,24 @@ public:
 
         staffStatusFilter = new QComboBox(staffsFilterGroup);
         staffStatusFilter->setObjectName("staffStatusFilter");
-        sizePolicy3.setHeightForWidth(staffStatusFilter->sizePolicy().hasHeightForWidth());
-        staffStatusFilter->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(staffStatusFilter->sizePolicy().hasHeightForWidth());
+        staffStatusFilter->setSizePolicy(sizePolicy5);
         staffStatusFilter->setMaximumSize(QSize(220, 40));
 
         staffsFilterLayout->addWidget(staffStatusFilter);
 
         staffFilterButton = new QPushButton(staffsFilterGroup);
         staffFilterButton->setObjectName("staffFilterButton");
-        sizePolicy3.setHeightForWidth(staffFilterButton->sizePolicy().hasHeightForWidth());
-        staffFilterButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(staffFilterButton->sizePolicy().hasHeightForWidth());
+        staffFilterButton->setSizePolicy(sizePolicy5);
         staffFilterButton->setMinimumSize(QSize(120, 36));
 
         staffsFilterLayout->addWidget(staffFilterButton);
 
         staffClearButton = new QPushButton(staffsFilterGroup);
         staffClearButton->setObjectName("staffClearButton");
-        sizePolicy3.setHeightForWidth(staffClearButton->sizePolicy().hasHeightForWidth());
-        staffClearButton->setSizePolicy(sizePolicy3);
+        sizePolicy5.setHeightForWidth(staffClearButton->sizePolicy().hasHeightForWidth());
+        staffClearButton->setSizePolicy(sizePolicy5);
         staffClearButton->setMinimumSize(QSize(120, 36));
 
         staffsFilterLayout->addWidget(staffClearButton);
