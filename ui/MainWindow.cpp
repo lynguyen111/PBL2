@@ -401,8 +401,8 @@ public:
     const bool hasIcon = !icon.isNull();
     int textLeft = inner.left();
     // Cover area
-    const int coverWidth = 130;
-    const int coverHeight = inner.height() - 24;
+    const int coverWidth = 110;
+    const int coverHeight = min(120, inner.height() - 24);
     const int coverTop = inner.top() + (inner.height() - coverHeight) / 2;
     QRect coverFrame(inner.left(), coverTop, coverWidth, coverHeight);
     QRect coverRect = coverFrame.adjusted(6, 6, -6, -6);

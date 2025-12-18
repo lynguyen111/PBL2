@@ -196,7 +196,7 @@ QLabel { font-size: 11pt; }
 QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
 )");
     // Modern font and light background
-    setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 11pt; } QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-size: 12pt; font-weight: 700; } QLabel { font-size: 11pt; } ");
+    setStyleSheet("QDialog { background: #f8fafc; border-radius: 12px; } QGroupBox { font-weight: bold; } QLineEdit, QComboBox, QSpinBox, QDateEdit, QPlainTextEdit { min-height: 32px; font-size: 12pt; } QDialogButtonBox QPushButton { min-width: 140px; min-height: 44px; font-size: 12pt; font-weight: 700; } QLabel { font-size: 12pt; } ");
 
     const QString staff = bridge::toQString(report.getStaffUsername());
     const QString notes = bridge::toQString(report.getNotes()).trimmed();

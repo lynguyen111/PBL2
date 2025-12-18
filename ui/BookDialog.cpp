@@ -73,7 +73,7 @@ QString secondaryActionStyle() {
 BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     setWindowTitle(tr("Thông tin sách"));
     setModal(true);
-    setWindowIcon(QIcon(":/ui/resources/icons/book.png"));
+    
     const QFont font("Segoe UI", 11);
     setFont(font);
     // Dùng chung style đơn giản với Thong tin ban doc
@@ -110,10 +110,14 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     // Ảnh bìa
     coverLabel = new QLabel(this);
     coverLabel->setFixedSize(120, 160);
-    coverLabel->setStyleSheet("border: 1px solid #ccc; background: #eee; margin-bottom: 8px;");
+    coverLabel->setStyleSheet("border: 1px solid #ccc; background: #eee;");
     coverLabel->setAlignment(Qt::AlignCenter);
+    coverLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     chooseCoverButton = new QPushButton(tr("Chọn ảnh bìa"), this);
     chooseCoverButton->setStyleSheet(secondaryActionStyle());
+    chooseCoverButton->setMinimumWidth(180);
+    chooseCoverButton->setMaximumWidth(240);
+    chooseCoverButton->setFixedHeight(36);
     connect(chooseCoverButton, &QPushButton::clicked, this, [this]() {
         QString file = QFileDialog::getOpenFileName(this, tr("Chọn ảnh bìa"), QString(), "Images (*.png *.jpg *.jpeg *.bmp)");
         if (!file.isEmpty()) {
@@ -143,10 +147,16 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
     // Thêm ảnh bìa vào đầu form
-    auto *coverLayout = new QHBoxLayout;
-    coverLayout->addWidget(coverLabel);
-    coverLayout->addWidget(chooseCoverButton);
-    form->addRow(tr("Ảnh bìa"), coverLayout);
+    auto *coverLayout = new QVBoxLayout;
+    coverLayout->setSpacing(10);
+    coverLayout->setContentsMargins(0, 0, 0, 0);
+    coverLayout->addWidget(coverLabel, 0, Qt::AlignHCenter);
+    coverLayout->addWidget(chooseCoverButton, 0, Qt::AlignHCenter);
+    auto *coverWidget = new QWidget(this);
+    coverWidget->setLayout(coverLayout);
+    coverWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    coverWidget->setFixedHeight(coverLabel->height() + chooseCoverButton->height() + coverLayout->spacing() + 8);
+    form->addRow(tr("Ảnh bìa"), coverWidget);
     form->addRow(tr("Mã sách"), idEdit);
     form->addRow(tr("Tiêu đề"), titleEdit);
     form->addRow(tr("Tác giả"), authorEdit);
@@ -182,7 +192,7 @@ BookDialog::BookDialog(QWidget *parent) : QDialog(parent) {
     layout->addWidget(formGroup);
     layout->addWidget(errorLabel);
     layout->addWidget(buttonBox, 0, Qt::AlignRight);
-    setMinimumSize(640, 600);
+    setFixedSize(640, 872);
 }
 
 void BookDialog::setBook(const model::Book &book, const bool editing) {

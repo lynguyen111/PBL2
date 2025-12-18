@@ -19,14 +19,14 @@
   <widget class="QLabel" name="logoLabel">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>30</y>
-     <width>60</width>
-     <height>60</height>
+     <x>240</x>
+     <y>120</y>
+     <width>91</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="pixmap">
-    <pixmap resource="ui/resources/icons/icons.qrc">:/icons/login.gif</pixmap>
+    <pixmap resource="resources/icons/icons.qrc">:/icons/login.gif</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -39,9 +39,9 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>80</y>
+     <y>30</y>
      <width>521</width>
-     <height>91</height>
+     <height>71</height>
     </rect>
    </property>
    <property name="font">
@@ -155,7 +155,7 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>240</y>
+     <y>260</y>
      <width>351</width>
      <height>51</height>
     </rect>
@@ -168,7 +168,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>250</y>
+     <y>270</y>
      <width>101</width>
      <height>31</height>
     </rect>
@@ -207,9 +207,23 @@
     </property>
    </item>
   </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>420</y>
+     <width>61</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Vai trò:</string>
+   </property>
+  </widget>
  </widget>
  <resources>
   <include location="resources/icons/icons.qrc"/>
+  <include location="ui/resources/icons/icons.qrc"/>
  </resources>
  <connections/>
 </ui>

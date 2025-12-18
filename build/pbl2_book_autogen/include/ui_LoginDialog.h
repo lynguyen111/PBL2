@@ -32,6 +32,7 @@ public:
     QLineEdit *usernameEdit;
     QLabel *usernameLabel;
     QComboBox *roleComboBox;
+    QLabel *label;
 
     void setupUi(QDialog *LoginDialog)
     {
@@ -41,13 +42,13 @@ public:
         LoginDialog->setStyleSheet(QString::fromUtf8(""));
         logoLabel = new QLabel(LoginDialog);
         logoLabel->setObjectName("logoLabel");
-        logoLabel->setGeometry(QRect(250, 30, 60, 60));
+        logoLabel->setGeometry(QRect(240, 120, 91, 81));
         logoLabel->setPixmap(QPixmap(QString::fromUtf8(":/icons/login.gif")));
         logoLabel->setScaledContents(true);
         logoLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
         titleLabel = new QLabel(LoginDialog);
         titleLabel->setObjectName("titleLabel");
-        titleLabel->setGeometry(QRect(30, 80, 521, 91));
+        titleLabel->setGeometry(QRect(30, 30, 521, 71));
         QFont font;
         font.setFamilies({QString::fromUtf8("Times New Roman")});
         font.setPointSize(18);
@@ -83,11 +84,11 @@ public:
         passwordLabel->setFont(font2);
         usernameEdit = new QLineEdit(LoginDialog);
         usernameEdit->setObjectName("usernameEdit");
-        usernameEdit->setGeometry(QRect(140, 240, 351, 51));
+        usernameEdit->setGeometry(QRect(140, 260, 351, 51));
         usernameEdit->setTabletTracking(true);
         usernameLabel = new QLabel(LoginDialog);
         usernameLabel->setObjectName("usernameLabel");
-        usernameLabel->setGeometry(QRect(30, 250, 101, 31));
+        usernameLabel->setGeometry(QRect(30, 270, 101, 31));
         usernameLabel->setFont(font2);
         roleComboBox = new QComboBox(LoginDialog);
         roleComboBox->addItem(QString());
@@ -95,6 +96,9 @@ public:
         roleComboBox->setObjectName("roleComboBox");
         roleComboBox->setGeometry(QRect(140, 420, 171, 31));
         roleComboBox->setFont(font2);
+        label = new QLabel(LoginDialog);
+        label->setObjectName("label");
+        label->setGeometry(QRect(30, 420, 61, 21));
 
         retranslateUi(LoginDialog);
 
@@ -116,6 +120,7 @@ public:
         roleComboBox->setItemText(0, QCoreApplication::translate("LoginDialog", "Admin", nullptr));
         roleComboBox->setItemText(1, QCoreApplication::translate("LoginDialog", "Staff", nullptr));
 
+        label->setText(QCoreApplication::translate("LoginDialog", "Vai tr\303\262:", nullptr));
     } // retranslateUi
 
 };
