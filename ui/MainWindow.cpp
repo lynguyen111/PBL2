@@ -63,6 +63,13 @@ constexpr int kCardRolePillColor = Qt::UserRole + 8;
 constexpr int kCardRoleSecondaryDetail = Qt::UserRole + 9;
 
 QString normalizedStatus(const QString &text);
+core::DynamicArray<model::LoanItem> loanItemsOrFallback(const model::Loan &loan);
+QString summarizeLoanStatus(const model::Loan &loan);
+QString summarizeBooks(const core::DynamicArray<model::LoanItem> &items,
+                       const core::DynamicArray<model::Book> &booksCache);
+int sumItemFine(const core::DynamicArray<model::LoanItem> &items);
+QString bookTitleById(const core::CustomString &bookId,
+                      const core::DynamicArray<model::Book> &booksCache);
 
 struct AffectedBookChange {
     QString id;
@@ -638,19 +645,20 @@ public:
 
         painter->setFont(headerFont);
         painter->setPen(QColor(0x22, 0x2C, 0x3A));
-        painter->drawText(QRect(inner.left(), y, textWidth, headerMetrics.height()), Qt::AlignLeft | Qt::AlignVCenter, header);
-        y += headerMetrics.height() + 6;
+        auto drawWrapped = [&](const QString &text, const QFontMetrics &fm, int spacing) {
+            if (text.isEmpty()) return 0;
+            QRect rect(inner.left(), y, textWidth, 2000);
+            rect = fm.boundingRect(rect, Qt::AlignLeft | Qt::TextWordWrap, text);
+            painter->drawText(rect, Qt::AlignLeft | Qt::TextWordWrap, text);
+            y = rect.bottom() + spacing;
+            return rect.height();
+        };
+        drawWrapped(header, headerMetrics, 6);
 
         painter->setFont(detailFont);
         painter->setPen(QColor(0x22, 0x2C, 0x3A));
-        if (!detail.isEmpty()) {
-            painter->drawText(QRect(inner.left(), y, textWidth, detailMetrics.height()), Qt::AlignLeft | Qt::AlignVCenter, detail);
-            y += detailMetrics.height() + 4;
-        }
-        if (!extraDetail.isEmpty()) {
-            painter->drawText(QRect(inner.left(), y, textWidth, detailMetrics.height()), Qt::AlignLeft | Qt::AlignVCenter, extraDetail);
-            y += detailMetrics.height() + 4;
-        }
+        drawWrapped(detail, detailMetrics, 4);
+        drawWrapped(extraDetail, detailMetrics, 4);
 
         // Badge
         QColor badgeBg = badgeColor.isValid() ? badgeColor : option.palette.highlight().color();
@@ -682,30 +690,22 @@ public:
 
     [[nodiscard]] QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override {
         Q_UNUSED(index);
-        const int h = option.fontMetrics.height();
-        const int baseHeight = max(120, h * 5 + 24);
+        // Cố định chiều cao để các thẻ cân nhau, đủ chỗ cho 2–3 dòng header + meta.
+        const int fixedHeight = 190;
 
-        // In IconMode, QListView sometimes provides a zero/very small width in
-        // sizeHint; compute a sane card width based on viewport so the cards
-        // remain visible in a grid (similar to CardListDelegate above).
+        int preferredWidth = max(option.rect.width(), 240);
         if (option.widget) {
             if (auto *view = qobject_cast<const QListView *>(option.widget)) {
                 if (view->viewMode() == QListView::IconMode) {
                     const int vw = view->viewport() ? view->viewport()->width() : view->width();
-                    constexpr int columns = 2;
                     int spacing = 8;
-                    if (auto *lw = qobject_cast<const QListWidget *>(view)) {
-                        spacing = lw->spacing();
-                    }
-                    const int totalGaps = (columns + 1) * spacing;
-                    int preferred = (vw - totalGaps) / columns;
-                    preferred = clamp(preferred, 220, 420);
-                    return {preferred, max(baseHeight, 180)};
+                    if (auto *lw = qobject_cast<const QListWidget *>(view)) spacing = lw->spacing();
+                    const int totalGaps = (2 + 1) * spacing;
+                    preferredWidth = clamp((vw - totalGaps) / 2, 220, 420);
                 }
             }
         }
-
-        return {max(option.rect.width(), 240), baseHeight};
+        return {preferredWidth, fixedHeight};
     }
 };
 
@@ -948,6 +948,74 @@ QString normalizeSearchText(const QString &text) {
         out.append(stripVietnameseAccent(ch));
     }
     return out;
+}
+
+core::DynamicArray<model::LoanItem> loanItemsOrFallback(const model::Loan &loan) {
+    if (!loan.getItems().isEmpty()) return loan.getItems();
+    core::DynamicArray<model::LoanItem> items(1);
+    model::LoanItem item;
+    item.setBookId(loan.getBookId());
+    item.setQuantity(1);
+    item.setDueDate(loan.getDueDate());
+    item.setReturnDate(loan.getReturnDate());
+    item.setStatus(loan.getStatus());
+    item.setFine(loan.getFine());
+    item.setExtensionCount(loan.getExtensionCount());
+    items[0] = item;
+    return items;
+}
+
+QString bookTitleById(const core::CustomString &bookId,
+                      const core::DynamicArray<model::Book> &booksCache) {
+    const QString target = toQString(bookId);
+    for (const auto &b : booksCache) {
+        if (toQString(b.getId()).compare(target, Qt::CaseInsensitive) == 0) {
+            return toQString(b.getTitle());
+        }
+    }
+    return target;
+}
+
+QString summarizeBooks(const core::DynamicArray<model::LoanItem> &items,
+                       const core::DynamicArray<model::Book> &booksCache) {
+    if (items.isEmpty()) return QObject::tr("Không rõ");
+    QStringList parts;
+    for (size_t i = 0; i < items.size(); ++i) {
+        const auto &it = items[i];
+        const QString title = bookTitleById(it.getBookId(), booksCache);
+        parts << title;
+        if (parts.size() >= 3) break; // tránh tooltip quá dài
+    }
+    if (items.size() > 3) {
+        parts << QObject::tr("... +%1").arg(static_cast<int>(items.size() - 3));
+    }
+    return parts.join(", ");
+}
+
+QString summarizeLoanStatus(const model::Loan &loan) {
+    const auto items = loanItemsOrFallback(loan);
+    bool anyOverdue = false;
+    bool anyBorrowed = false;
+    bool anyLost = false;
+    bool anyDamaged = false;
+    for (const auto &it : items) {
+        const QString st = normalizedStatus(toQString(it.getStatus()));
+        if (st == QStringLiteral("OVERDUE")) anyOverdue = true;
+        else if (st == QStringLiteral("BORROWED")) anyBorrowed = true;
+        else if (st == QStringLiteral("LOST")) anyLost = true;
+        else if (st == QStringLiteral("DAMAGED")) anyDamaged = true;
+    }
+    if (anyOverdue) return QStringLiteral("OVERDUE");
+    if (anyBorrowed) return QStringLiteral("BORROWED");
+    if (anyLost) return QStringLiteral("LOST");
+    if (anyDamaged) return QStringLiteral("DAMAGED");
+    return QStringLiteral("RETURNED");
+}
+
+int sumItemFine(const core::DynamicArray<model::LoanItem> &items) {
+    int total = 0;
+    for (const auto &it : items) total += it.getFine();
+    return total;
 }
 
 bool containsAllTokens(const QString &haystackRaw, const QString &termRaw) {
@@ -1767,14 +1835,6 @@ void MainWindow::reloadData() {
     const int books = booksCache.size();
     const int readers = readersCache.size();
     const int loans = loansCache.size();
-    // Lightweight diagnostics to confirm data is loaded from the expected path
-    qInfo().noquote() << "[DataDiag] dataDir =" << toQString(dataDirectory)
-                      << "| books:" << books
-                      << "readers:" << readers
-                      << "loans:" << loans
-                      << "reports:" << reportsCache.size()
-                      << "staff:" << staffsCache.size()
-                      << "accounts:" << accountsCache.size();
 
     if (statsLabel) {
         statsLabel->setText(tr("Sách: %1 | Bạn đọc: %2 | Phiếu mượn: %3 | Giới hạn sách/bạn đọc: %4 | Tiền phạt/ngày: %5 VND")
@@ -2238,43 +2298,40 @@ void MainWindow::fillLoansList(const core::DynamicArray<model::Loan> &loans) {
         return tr("%1 (%2)").arg(name, readerId);
     };
 
-    auto bookDisplay = [&](const QString &bookId) -> QString {
-        QString title;
-        for (const auto &book : booksCache) {
-            if (toQString(book.getId()).compare(bookId, Qt::CaseInsensitive) == 0) {
-                title = toQString(book.getTitle());
-                break;
-            }
-        }
-        if (title.isEmpty()) return bookId;
-        return tr("%1 (%2)").arg(title, bookId);
-    };
-
     int restoreRow = -1;
     for (int row = 0; row < loans.size(); ++row) {
         const auto &loan = loans[row];
         const QString loanId = toQString(loan.getLoanId());
         const QString readerId = toQString(loan.getReaderId());
-        const QString bookId = toQString(loan.getBookId());
         const QString staffUsername = toQString(loan.getStaffUsername()).trimmed();
-        const QString statusCode = normalizedStatus(toQString(loan.getStatus()));
-        const QString statusText = loanStatusText(toQString(loan.getStatus()));
+        const auto items = loanItemsOrFallback(loan);
+        const QString statusCode = summarizeLoanStatus(loan);
+        const QString statusText = loanStatusText(statusCode);
+        const int extensionCount = loan.getExtensionCount();
+        const QString booksSummary = summarizeBooks(items, booksCache);
 
         const QString borrowDate = loan.getBorrowDate().isValid() ? toQDate(loan.getBorrowDate()).toString(Qt::ISODate) : tr("Không rõ");
-        const QString dueDate = loan.getDueDate().isValid() ? toQDate(loan.getDueDate()).toString(Qt::ISODate) : tr("Không rõ");
+        QString dueDate = tr("Không rõ");
+        if (!items.isEmpty() && items[0].getDueDate().isValid()) {
+            dueDate = toQDate(items[0].getDueDate()).toString(Qt::ISODate);
+        }
         const QString returnDate = loan.getReturnDate().isValid() ? toQDate(loan.getReturnDate()).toString(Qt::ISODate) : tr("Chưa trả");
 
-        const QString headerLine = tr("%1 - %2").arg(loanId, bookDisplay(bookId));
+        const QString headerLine = tr("%1\n%2").arg(loanId, booksSummary);
         const QString staffDisplay = staffUsername.isEmpty() ? tr("Không rõ") : staffUsername;
         const QString metaLine = tr("Bạn đọc: %1 | NV: %2").arg(readerDisplay(readerId), staffDisplay);
-        const QString detailLine = tr("Mượn: %1 | Hạn: %2").arg(borrowDate, dueDate);
+        const QString detailLine = tr("Mượn: %1 | Hạn: %2 | Gia hạn: %3/2").arg(borrowDate, dueDate).arg(extensionCount);
         QString extraDetail;
         if (statusCode == QStringLiteral("OVERDUE")) {
-            if (const QDate due = loan.getDueDate().isValid() ? toQDate(loan.getDueDate()) : QDate(); due.isValid()) {
-                const int daysLate = max(0, static_cast<int>(due.daysTo(currentDate())));
-                extraDetail = daysLate > 0
-                                  ? tr("Quá hạn: %1 ngày").arg(daysLate)
-                                  : tr("Quá hạn");
+            QDate earliestDue;
+            for (const auto &it : items) {
+                if (!it.getDueDate().isValid()) continue;
+                const QDate d = toQDate(it.getDueDate());
+                if (!earliestDue.isValid() || d < earliestDue) earliestDue = d;
+            }
+            if (earliestDue.isValid()) {
+                const int daysLate = max(0, static_cast<int>(earliestDue.daysTo(currentDate())));
+                extraDetail = daysLate > 0 ? tr("Quá hạn: %1 ngày").arg(daysLate) : tr("Quá hạn");
             } else {
                 extraDetail = tr("Quá hạn");
             }
@@ -2291,12 +2348,13 @@ void MainWindow::fillLoansList(const core::DynamicArray<model::Loan> &loans) {
         item->setData(kCardRoleSecondaryDetail, extraDetail);
         item->setData(kCardRoleBadgeText, statusText);
         item->setData(kCardRoleBadgeColor, statusBadgeColor(statusCode));
-        item->setData(kCardRolePillText, tr("Tiền phạt: %1 VND").arg(loan.getFine()));
+        item->setData(kCardRolePillText, tr("Tiền phạt: %1 VND").arg(sumItemFine(items)));
         item->setData(kCardRolePillColor, QVariant());
         item->setToolTip(QStringList{headerLine,
                                      metaLine,
                                      detailLine,
                                      extraDetail,
+                                     tr("Sách: %1").arg(booksSummary),
                                      tr("Trạng thái: %1").arg(statusText),
                                      tr("Nhân viên lập phiếu: %1").arg(staffDisplay)}
                              .join('\n'));
@@ -2337,30 +2395,30 @@ void MainWindow::applyLoanFilter() {
         }
         return {};
     };
-    const auto bookTitleById = [&](const QString &id) -> QString {
-        for (const auto &b : booksCache) {
-            if (toQString(b.getId()).compare(id, Qt::CaseInsensitive) == 0) {
-                return toQString(b.getTitle());
-            }
-        }
-        return {};
-    };
     for (const auto &loan : loansCache) {
         const QString loanId = toQString(loan.getLoanId());
         const QString readerId = toQString(loan.getReaderId());
-        const QString bookId = toQString(loan.getBookId());
         const QString staffUsername = toQString(loan.getStaffUsername());
-        const QString statusCode = normalizedStatus(toQString(loan.getStatus()));
-        const QString statusText = loanStatusText(toQString(loan.getStatus()));
+        const QString statusCode = summarizeLoanStatus(loan);
+        const QString statusText = loanStatusText(statusCode);
+        const auto items = loanItemsOrFallback(loan);
+        QStringList bookTitles;
+        QStringList bookIds;
+        for (const auto &it : items) {
+            const QString t = bookTitleById(it.getBookId(), booksCache);
+            if (!t.isEmpty()) bookTitles << t;
+            bookIds << toQString(it.getBookId());
+        }
         const QString readerName = readerNameById(readerId);
-        const QString bookTitle = bookTitleById(bookId);
+        const QString bookTitle = bookTitles.join(' ');
+        const QString bookIdJoined = bookIds.join(' ');
 
         if (!term.isEmpty()) {
             const QString haystack = QStringList{
                                          loanId,
                                          readerId,
                                          readerName,
-                                         bookId,
+                                         bookIdJoined,
                                          bookTitle,
                                          staffUsername,
                                          statusCode,
@@ -2400,13 +2458,18 @@ void MainWindow::recordLoanReportEntry(const model::Loan &loan, const QString &e
     entry.setHandledLoans(1);
     entry.setLostOrDamaged(normalizedEvent == QStringLiteral("LOST") || normalizedEvent == QStringLiteral("DAMAGED") ? 1 : 0);
     entry.setOverdueReaders(0);
-    entry.setAffectedBooks(loan.getBookId());
+    const auto items = loanItemsOrFallback(loan);
+    QStringList affected;
+    for (const auto &it : items) {
+        affected << QStringLiteral("%1:%2").arg(toQString(it.getBookId()), QString::number(max(1, it.getQuantity())));
+    }
+    entry.setAffectedBooks(toCustomString(affected.join(", ")));
     entry.setStatus(toCustomString(normalizedEvent));
     entry.setCreatedAt(toCoreDateTime(bridge::currentDateTime()));
 
     const QString loanId = toQString(loan.getLoanId());
     const QString readerId = toQString(loan.getReaderId());
-    const QString bookId = toQString(loan.getBookId());
+    const QString bookId = items.isEmpty() ? QString() : toQString(items[0].getBookId());
 
     const auto readerNameById = [&](const QString &id) -> QString {
         for (const auto &r : readersCache) {
@@ -3603,7 +3666,7 @@ void MainWindow::handleNewLoan(const QString &preselectedBookId) {
     LoanDialog dialog(availableReaders, booksCache, currentConfig.getMaxBorrowDays(), staffDisplay, this);
     dialog.presetLoanId(nextLoanId(), true);
     if (!preselectedBookId.trimmed().isEmpty()) {
-        dialog.presetBook(preselectedBookId);
+        dialog.presetInitialBook(preselectedBookId);
     }
     if (dialog.exec() != QDialog::Accepted) return;
     auto loan = dialog.loan();
@@ -3616,41 +3679,68 @@ void MainWindow::handleNewLoan(const QString &preselectedBookId) {
     // Không cho phép cùng bạn đọc thuê trùng sách nếu còn đang mượn
     const auto existingLoans = loanService.fetchAll();
     const QString newReaderId = toQString(loan.getReaderId());
-    const QString newBookId = toQString(loan.getBookId());
-    const bool duplicateActiveLoan = ranges::any_of(existingLoans, [&](const model::Loan &l) {
-        const QString status = normalizedStatus(toQString(l.getStatus()));
-        if (status != QStringLiteral("BORROWED") && status != QStringLiteral("OVERDUE")) return false;
-        return toQString(l.getReaderId()).compare(newReaderId, Qt::CaseInsensitive) == 0 &&
-               toQString(l.getBookId()).compare(newBookId, Qt::CaseInsensitive) == 0;
-    });
-    if (duplicateActiveLoan) {
-        showWarningDialog(tr("Không hợp lệ"),
-                          tr("Bạn đọc này đang mượn cuốn sách này. Không thể lập phiếu mới cho cùng sách khi chưa trả."));
-        return;
+    const auto newItems = loanItemsOrFallback(loan);
+    for (const auto &newItem : newItems) {
+        const QString newBookId = toQString(newItem.getBookId());
+        const bool duplicateActiveLoan = ranges::any_of(existingLoans, [&](const model::Loan &l) {
+            const QString status = summarizeLoanStatus(l);
+            if (status != QStringLiteral("BORROWED") && status != QStringLiteral("OVERDUE")) return false;
+            if (toQString(l.getReaderId()).compare(newReaderId, Qt::CaseInsensitive) != 0) return false;
+            const auto items = loanItemsOrFallback(l);
+            return ranges::any_of(items, [&](const model::LoanItem &it) {
+                return toQString(it.getBookId()).compare(newBookId, Qt::CaseInsensitive) == 0 &&
+                       (normalizedStatus(toQString(it.getStatus())) == QStringLiteral("BORROWED") ||
+                        normalizedStatus(toQString(it.getStatus())) == QStringLiteral("OVERDUE"));
+            });
+        });
+        if (duplicateActiveLoan) {
+            showWarningDialog(tr("Không hợp lệ"),
+                              tr("Bạn đọc này đang mượn cuốn sách %1. Không thể lập phiếu mới cho cùng sách khi chưa trả.")
+                                  .arg(newBookId));
+            return;
+        }
     }
+
     const int maxBooksPerReader = max(1, currentConfig.getMaxBooksPerReader());
-    int activeLoansForReader = 0;
+    int activeBooksForReader = 0;
     for (const auto &l : existingLoans) {
-        const QString status = normalizedStatus(toQString(l.getStatus()));
+        const QString status = summarizeLoanStatus(l);
         if (status != QStringLiteral("BORROWED") && status != QStringLiteral("OVERDUE")) continue;
         if (toQString(l.getReaderId()).compare(newReaderId, Qt::CaseInsensitive) != 0) continue;
-        ++activeLoansForReader;
-        if (activeLoansForReader >= maxBooksPerReader) break;
+        const auto items = loanItemsOrFallback(l);
+        for (const auto &it : items) {
+            const QString st = normalizedStatus(toQString(it.getStatus()));
+            if (st == QStringLiteral("BORROWED") || st == QStringLiteral("OVERDUE")) {
+                activeBooksForReader += max(1, it.getQuantity());
+            }
+        }
     }
-    if (activeLoansForReader >= maxBooksPerReader) {
-        showWarningDialog(tr("Không khả dụng"), tr("Không thể được mượn thêm nữa"));
+    int requestedQty = 0;
+    for (const auto &it : newItems) {
+        requestedQty += max(1, it.getQuantity());
+    }
+    if (activeBooksForReader + requestedQty > maxBooksPerReader) {
+        showWarningDialog(tr("Không khả dụng"), tr("Số lượng sách mượn vượt giới hạn cho phép."));
         return;
     }
 
-    const auto bookOpt = bookService.findById(loan.getBookId());
-    if (!bookOpt.has_value()) {
-        showWarningDialog(tr("Không tìm thấy"), tr("Không tìm thấy sách đã chọn"));
-        return;
+    // Kiểm tra tồn kho và trừ số lượng
+    core::DynamicArray<model::Book> touchedBooks;
+    touchedBooks.reserve(newItems.size());
+    for (const auto &it : newItems) {
+        const auto bookOpt = bookService.findById(it.getBookId());
+        if (!bookOpt.has_value()) {
+            showWarningDialog(tr("Không tìm thấy"), tr("Không tìm thấy sách %1").arg(toQString(it.getBookId())));
+            return;
+        }
+        if (bookOpt->getQuantity() < it.getQuantity()) {
+            showWarningDialog(tr("Không khả dụng"), tr("Sách %1 không đủ số lượng.").arg(toQString(it.getBookId())));
+            return;
+        }
+        touchedBooks.append(*bookOpt);
     }
-    if (bookOpt->getQuantity() <= 0) {
-        showWarningDialog(tr("Không khả dụng"), tr("Sách này đã hết số lượng cho mượn."));
-        return;
-    }
+
+    // Ghi loan
     loan.setStatus(core::CustomStringLiteral("BORROWED"));
     loan.setFine(0);
     if (!loanService.createLoan(loan)) {
@@ -3658,9 +3748,16 @@ void MainWindow::handleNewLoan(const QString &preselectedBookId) {
         return;
     }
 
-    model::Book updatedBook = *bookOpt;
-    updatedBook.setQuantity(max(0, updatedBook.getQuantity() - 1));
-    if (!bookService.updateBook(updatedBook)) {
+    bool inventoryOk = true;
+    for (size_t i = 0; i < newItems.size(); ++i) {
+        model::Book updated = touchedBooks[i];
+        updated.setQuantity(max(0, updated.getQuantity() - newItems[i].getQuantity()));
+        if (!bookService.updateBook(updated)) {
+            inventoryOk = false;
+            break;
+        }
+    }
+    if (!inventoryOk) {
         loanService.removeLoan(loan.getLoanId());
         showWarningDialog(tr("Không thành công"), tr("Không thể cập nhật số lượng sách."));
         return;
@@ -3697,38 +3794,77 @@ void MainWindow::handleMarkReturned() {
         showWarningDialog(tr("Không tìm thấy"), tr("Không tìm thấy phiểu mượn."));
         return;
     }
-    if (normalizedStatus(loanOpt->getStatus()) == QStringLiteral("RETURNED")) {
+    if (summarizeLoanStatus(*loanOpt) == QStringLiteral("RETURNED")) {
         showInfoDialog(tr("Thông báo"), tr("Phiếu này đã được đóng."));
         return;
     }
 
     const QDate returnDate = currentDate();
-    const auto dueDate = toQDate(loanOpt->getDueDate());
-    const qint64 overdueSpan = dueDate.daysTo(returnDate);
-    const int lateDays = overdueSpan > 0 ? static_cast<int>(overdueSpan) : 0;
-    const int fine = lateDays * currentConfig.getFinePerDay();
+    auto loan = *loanOpt;
+    auto items = loanItemsOrFallback(loan);
+    QStringList returnableNames;
+    for (const auto &it : items) {
+        const QString st = normalizedStatus(toQString(it.getStatus()));
+        if (st == QStringLiteral("BORROWED") || st == QStringLiteral("OVERDUE")) {
+            const QString label = tr("%1 (%2)").arg(bookTitleById(it.getBookId(), booksCache), toQString(it.getBookId()));
+            returnableNames.append(label);
+        }
+    }
+    if (returnableNames.isEmpty()) {
+        showInfoDialog(tr("Thông báo"), tr("Không có sách nào đang mượn để trả."));
+        return;
+    }
+    bool ok = false;
+    const QString choice = QInputDialog::getItem(this,
+                                                tr("Trả sách"),
+                                                tr("Chọn sách cần trả"),
+                                                returnableNames,
+                                                0,
+                                                false,
+                                                &ok);
+    if (!ok) return;
+    int itemIndex = -1;
+    for (size_t i = 0; i < items.size(); ++i) {
+        const QString label = tr("%1 (%2)").arg(bookTitleById(items[i].getBookId(), booksCache), toQString(items[i].getBookId()));
+        if (label == choice) {
+            itemIndex = static_cast<int>(i);
+            break;
+        }
+    }
+    if (itemIndex < 0) return;
 
-    if (!loanService.updateStatus(loanKey, core::CustomStringLiteral("RETURNED"), toCoreDate(returnDate))) {
+    auto &selectedItem = items[static_cast<size_t>(itemIndex)];
+    const auto dueDate = selectedItem.getDueDate().isValid() ? toQDate(selectedItem.getDueDate()) : QDate();
+    const qint64 overdueSpan = dueDate.isValid() ? dueDate.daysTo(returnDate) : 0;
+    const int lateDays = overdueSpan > 0 ? static_cast<int>(overdueSpan) : 0;
+    const int fine = lateDays * currentConfig.getFinePerDay() * max(1, selectedItem.getQuantity());
+
+    selectedItem.setStatus(core::CustomStringLiteral("RETURNED"));
+    selectedItem.setReturnDate(toCoreDate(returnDate));
+    selectedItem.setFine(fine);
+    loan.setItems(items);
+    loan.setStatus(toCustomString(summarizeLoanStatus(loan)));
+    loan.setFine(sumItemFine(items));
+
+    if (!loanService.updateLoan(loan)) {
         showWarningDialog(tr("Không thành công"), tr("Không thể cập nhật trạng thái phiếu."));
         return;
     }
-    if (!loanService.applyFine(loanKey, fine)) {
+    if (!loanService.applyFine(loanKey, loan.getFine())) {
         showWarningDialog(tr("Không thành công"), tr("Không thể cập nhật tiền phạt."));
         return;
     }
 
-    const auto bookOpt = bookService.findById(loanOpt->getBookId());
+    const auto bookOpt = bookService.findById(selectedItem.getBookId());
     if (bookOpt.has_value()) {
         model::Book updatedBook = *bookOpt;
-        updatedBook.setQuantity(updatedBook.getQuantity() + 1);
+        updatedBook.setQuantity(updatedBook.getQuantity() + selectedItem.getQuantity());
         if (!bookService.updateBook(updatedBook)) {
             showWarningDialog(tr("Cảnh báo"), tr("Không thể cập nhật số lượng sách."));
         }
     }
 
-    model::Loan logLoan = *loanOpt;
-    logLoan.setStatus(core::CustomStringLiteral("RETURNED"));
-    logLoan.setReturnDate(toCoreDate(returnDate));
+    model::Loan logLoan = loan;
     const QString lateNote = lateDays > 0 ? tr("Trả trễ %1 ngày").arg(lateDays) : QString();
     recordLoanReportEntry(logLoan, QStringLiteral("RETURNED"), lateNote, fine);
 
@@ -3763,19 +3899,53 @@ void MainWindow::handleExtendLoan() {
         showWarningDialog(tr("Không tìm thấy"), tr("Không tìm thấy phiếu mượn."));
         return;
     }
-    const QString statusCode = normalizedStatus(loanOpt->getStatus());
-    if (statusCode != QStringLiteral("BORROWED") && statusCode != QStringLiteral("OVERDUE")) {
-        showInfoDialog(tr("Thông báo"), tr("Phiếu này đã đóng, không thể gia hạn."));
+    auto loan = *loanOpt;
+    auto items = loanItemsOrFallback(loan);
+    QStringList extendables;
+    for (const auto &it : items) {
+        const QString st = normalizedStatus(toQString(it.getStatus()));
+        if ((st == QStringLiteral("BORROWED") || st == QStringLiteral("OVERDUE")) && it.getExtensionCount() < 2) {
+            extendables << tr("%1 (%2) - đã gia hạn %3/2")
+                             .arg(bookTitleById(it.getBookId(), booksCache), toQString(it.getBookId()))
+                             .arg(it.getExtensionCount());
+        }
+    }
+    if (extendables.isEmpty()) {
+        showInfoDialog(tr("Thông báo"), tr("Không có sách đủ điều kiện gia hạn."));
         return;
     }
 
+    const QString choice = QInputDialog::getItem(this,
+                                                tr("Gia hạn phiếu"),
+                                                tr("Chọn sách cần gia hạn"),
+                                                extendables,
+                                                0,
+                                                false,
+                                                &ok);
+    if (!ok) return;
+
+    int idx = -1;
+    for (size_t i = 0; i < items.size(); ++i) {
+        const QString label = tr("%1 (%2) - đã gia hạn %3/2")
+                                  .arg(bookTitleById(items[i].getBookId(), booksCache), toQString(items[i].getBookId()))
+                                  .arg(items[i].getExtensionCount());
+        if (label == choice) {
+            idx = static_cast<int>(i);
+            break;
+        }
+    }
+    if (idx < 0) return;
+
     const int days = QInputDialog::getInt(this, tr("Gia hạn phiếu"), tr("Số ngày bổ sung"), 3, 1, 60, 1, &ok);
     if (!ok) return;
-    model::Loan updatedLoan = *loanOpt;
-    const QDate adjustedDueDate = toQDate(updatedLoan.getDueDate()).addDays(days);
-    updatedLoan.setDueDate(toCoreDate(adjustedDueDate));
-    updatedLoan.setStatus(core::CustomStringLiteral("BORROWED"));
-    if (!loanService.updateLoan(updatedLoan)) {
+    auto &itemRef = items[static_cast<size_t>(idx)];
+    const QDate adjustedDueDate = toQDate(itemRef.getDueDate()).addDays(days);
+    itemRef.setDueDate(toCoreDate(adjustedDueDate));
+    itemRef.setStatus(core::CustomStringLiteral("BORROWED"));
+    itemRef.setExtensionCount(itemRef.getExtensionCount() + 1);
+    loan.setItems(items);
+    loan.setStatus(core::CustomStringLiteral("BORROWED"));
+    if (!loanService.updateLoan(loan)) {
         showWarningDialog(tr("Không thành công"), tr("Không thể gia hạn phiếu."));
         return;
     }
@@ -3819,13 +3989,18 @@ void MainWindow::handleDeleteLoan() {
         return;
     }
     
-    const QString loanStatus = normalizedStatus(loanOpt->getStatus());
+    const QString loanStatus = summarizeLoanStatus(*loanOpt);
+    const auto loanItems = loanItemsOrFallback(*loanOpt);
+    const bool hasActiveItems = ranges::any_of(loanItems, [](const model::LoanItem &it) {
+        const QString st = normalizedStatus(toQString(it.getStatus()));
+        return st == QStringLiteral("BORROWED") || st == QStringLiteral("OVERDUE");
+    });
     
     // If loan is still BORROWED, need to return the book quantity
-    if (loanStatus == QStringLiteral("BORROWED")) {
+    if (hasActiveItems) {
         if (askEventQuestion(
                 tr("Xác nhận"),
-                tr("Phiếu mượn này đang ở trạng thái 'Đang mượn'. Xóa sẽ tự động hoàn trả sách. Bạn có chắc chắn?")) !=
+                tr("Phiếu mượn này đang còn sách chưa trả. Xóa sẽ tự động hoàn trả sách. Bạn có chắc chắn?")) !=
             QMessageBox::Yes) {
             return;
         }
@@ -3844,13 +4019,17 @@ void MainWindow::handleDeleteLoan() {
         return;
     }
 
-    if (loanStatus == QStringLiteral("BORROWED")) {
-        const auto bookOpt = bookService.findById(loanOpt->getBookId());
-        if (bookOpt.has_value()) {
-            model::Book updatedBook = *bookOpt;
-            updatedBook.setQuantity(updatedBook.getQuantity() + 1);
-            if (!bookService.updateBook(updatedBook)) {
-                showWarningDialog(tr("Cảnh báo"), tr("Không thể cập nhật số lượng sách."));
+    if (hasActiveItems) {
+        for (const auto &it : loanItems) {
+            const QString st = normalizedStatus(toQString(it.getStatus()));
+            if (st != QStringLiteral("BORROWED") && st != QStringLiteral("OVERDUE")) continue;
+            const auto bookOpt = bookService.findById(it.getBookId());
+            if (bookOpt.has_value()) {
+                model::Book updatedBook = *bookOpt;
+                updatedBook.setQuantity(updatedBook.getQuantity() + it.getQuantity());
+                if (!bookService.updateBook(updatedBook)) {
+                    showWarningDialog(tr("Cảnh báo"), tr("Không thể cập nhật số lượng sách %1.").arg(toQString(it.getBookId())));
+                }
             }
         }
     }
@@ -3885,15 +4064,39 @@ void MainWindow::handleLossOrDamage(const QString &status) {
         showWarningDialog(tr("Không tìm thấy"), tr("Không tìm thấy phiếu mượn."));
         return;
     }
-    const QString previousStatus = normalizedStatus(loanOpt->getStatus());
-    if (previousStatus != QStringLiteral("BORROWED") && previousStatus != QStringLiteral("OVERDUE")) {
-        showInfoDialog(tr("Thông báo"), tr("Phiếu này đã được đóng hoặc báo mất/hư."));
+    auto loan = *loanOpt;
+    auto items = loanItemsOrFallback(loan);
+    QStringList candidates;
+    for (const auto &it : items) {
+        const QString st = normalizedStatus(toQString(it.getStatus()));
+        if (st == QStringLiteral("BORROWED") || st == QStringLiteral("OVERDUE")) {
+            candidates << tr("%1 (%2)").arg(bookTitleById(it.getBookId(), booksCache), toQString(it.getBookId()));
+        }
+    }
+    if (candidates.isEmpty()) {
+        showInfoDialog(tr("Thông báo"), tr("Không có sách đang mượn để báo mất/hư."));
         return;
     }
-    const bool alreadyDamaged = previousStatus == QStringLiteral("DAMAGED");
-    const bool isDamaged = status == QStringLiteral("DAMAGED");
 
     bool ok = false;
+    const QString choice = QInputDialog::getItem(this,
+                                                status == QStringLiteral("LOST") ? tr("Báo mất sách") : tr("Báo hư hỏng"),
+                                                tr("Chọn sách"),
+                                                candidates,
+                                                0,
+                                                false,
+                                                &ok);
+    if (!ok) return;
+    int idx = -1;
+    for (size_t i = 0; i < items.size(); ++i) {
+        const QString label = tr("%1 (%2)").arg(bookTitleById(items[i].getBookId(), booksCache), toQString(items[i].getBookId()));
+        if (label == choice) {
+            idx = static_cast<int>(i);
+            break;
+        }
+    }
+    if (idx < 0) return;
+
     QString reason = QInputDialog::getMultiLineText(this,
                                                    status == QStringLiteral("LOST") ? tr("Báo mất sách") : tr("Báo hư hỏng"),
                                                    tr("Mô tả chi tiết"),
@@ -3906,22 +4109,21 @@ void MainWindow::handleLossOrDamage(const QString &status) {
 
     const QDate today = currentDate();
     int fee = 0;
-    if (status == QStringLiteral("LOST")) {
-        // Tiền đền bù mất sách = giá gốc * 2 + tiền trễ (nếu có)
-        const auto dueDate = toQDate(loanOpt->getDueDate());
-        const qint64 overdueSpan = dueDate.daysTo(today);
-        const int lateDays = overdueSpan > 0 ? static_cast<int>(overdueSpan) : 0;
-        const int lateFee = lateDays * currentConfig.getFinePerDay();
+    auto &selected = items[static_cast<size_t>(idx)];
+    const QDate dueDate = selected.getDueDate().isValid() ? toQDate(selected.getDueDate()) : today;
+    const qint64 overdueSpan = dueDate.daysTo(today);
+    const int lateDays = overdueSpan > 0 ? static_cast<int>(overdueSpan) : 0;
+    const int lateFee = lateDays * currentConfig.getFinePerDay() * max(1, selected.getQuantity());
 
+    if (status == QStringLiteral("LOST")) {
         int bookPrice = 0;
-        const auto bookOpt = bookService.findById(loanOpt->getBookId());
+        const auto bookOpt = bookService.findById(selected.getBookId());
         if (bookOpt.has_value()) {
             bookPrice = max(0, bookOpt->getOriginalPrice());
         }
-        fee = bookPrice * 2 + lateFee;
-        ok = true;
+        fee = bookPrice * 2 * max(1, selected.getQuantity()) + lateFee;
     } else {
-        int defaultFee = currentConfig.getFinePerDay() * 10;
+        int defaultFee = currentConfig.getFinePerDay() * 10 * max(1, selected.getQuantity());
         if (defaultFee <= 0) defaultFee = 100000;
         fee = QInputDialog::getInt(this,
                                    tr("Tiền sửa chữa"),
@@ -3931,21 +4133,26 @@ void MainWindow::handleLossOrDamage(const QString &status) {
                                    10000000,
                                    1000,
                                    &ok);
+        if (!ok) return;
     }
-    if (!ok) return;
 
-    const auto statusKey = toCustomString(status);
-    if (!loanService.updateStatus(loanKey, statusKey, toCoreDate(today))) {
+    selected.setStatus(toCustomString(status));
+    selected.setReturnDate(toCoreDate(today));
+    selected.setFine(fee);
+    loan.setItems(items);
+    loan.setStatus(toCustomString(summarizeLoanStatus(loan)));
+    loan.setFine(sumItemFine(items));
+
+    if (!loanService.updateLoan(loan)) {
         showWarningDialog(tr("Không thành công"), tr("Không thể cập nhật trạng thái phiếu."));
         return;
     }
-    if (!loanService.applyFine(loanKey, fee)) {
+    if (!loanService.applyFine(loanKey, loan.getFine())) {
         showWarningDialog(tr("Không thành công"), tr("Không thể cập nhật tiền phạt."));
         return;
     }
 
-    model::Loan logLoan = *loanOpt;
-    logLoan.setStatus(statusKey);
+    model::Loan logLoan = loan;
     logLoan.setReturnDate(toCoreDate(today));
     const QString statusLabel = status == QStringLiteral("LOST") ? tr("Mất sách") : tr("Hư hỏng");
     recordLoanReportEntry(logLoan, status, reason, fee);
@@ -3979,6 +4186,7 @@ void MainWindow::handleViewLoanReceipt() {
         return;
     }
     const auto loan = *loanOpt;
+    const auto loanItems = loanItemsOrFallback(loan);
 
     auto findReader = [&](const core::CustomString &id) -> core::Optional<model::Reader> {
         const QString target = toQString(id);
@@ -3996,25 +4204,32 @@ void MainWindow::handleViewLoanReceipt() {
     };
 
     const auto readerOpt = findReader(loan.getReaderId());
-    const auto bookOpt = findBook(loan.getBookId());
-
     const QString readerName = readerOpt.has_value() ? toQString(readerOpt->getFullName()) : tr("Không rõ");
     const QString readerId = toQString(loan.getReaderId());
     const QString readerContact = readerOpt.has_value() ? toQString(readerOpt->getPhone()) : tr("?");
-    const QString statusText = loanStatusText(toQString(loan.getStatus()));
+    const QString statusText = loanStatusText(summarizeLoanStatus(loan));
     const QString borrowDate = loan.getBorrowDate().isValid() ? toQDate(loan.getBorrowDate()).toString(QStringLiteral("dd/MM/yyyy"))
                                                               : tr("Không rõ");
-    const QString dueDate = loan.getDueDate().isValid() ? toQDate(loan.getDueDate()).toString(QStringLiteral("dd/MM/yyyy"))
-                                                        : tr("Không rõ");
+    const QString dueDate = (!loanItems.isEmpty() && loanItems[0].getDueDate().isValid())
+                                ? toQDate(loanItems[0].getDueDate()).toString(QStringLiteral("dd/MM/yyyy"))
+                                : tr("Không rõ");
     const QString returnDate = loan.getReturnDate().isValid() ? toQDate(loan.getReturnDate()).toString(QStringLiteral("dd/MM/yyyy"))
                                                               : tr("Chưa trả");
     const QString staffUsername = toQString(loan.getStaffUsername()).isEmpty() ? tr("Không rõ")
                                                                                : toQString(loan.getStaffUsername());
-    const QString bookId = toQString(loan.getBookId());
-    const QString bookTitle = bookOpt.has_value() ? toQString(bookOpt->getTitle()) : tr("Không rõ");
-    const QString bookPublisher = bookOpt.has_value() ? toQString(bookOpt->getPublisher()) : tr("Không rõ");
-    const QString noteText = tr("Trạng thái: %1 | Hạn trả: %2 | Ngày trả: %3")
-                                 .arg(statusText, dueDate, returnDate);
+    QStringList bookSummaryLines;
+    for (const auto &it : loanItems) {
+        const auto bookOpt = findBook(it.getBookId());
+        const QString title = bookOpt.has_value() ? toQString(bookOpt->getTitle()) : toQString(it.getBookId());
+        const QString line = QStringLiteral("%1 (%2) x%3").arg(title, toQString(it.getBookId())).arg(max(1, it.getQuantity()));
+        bookSummaryLines << line;
+    }
+    const QString booksLine = bookSummaryLines.join(QStringLiteral("; "));
+    const QString noteText = tr("Sách: %1 | Trạng thái: %2 | Hạn trả: %3 | Ngày trả: %4")
+                                 .arg(booksLine,
+                                      statusText,
+                                      dueDate,
+                                      returnDate);
 
     QDialog dlg(this);
     dlg.setWindowTitle(tr("Phiếu mượn %1").arg(loanId));
@@ -4062,7 +4277,7 @@ void MainWindow::handleViewLoanReceipt() {
     divider->setStyleSheet(QStringLiteral("color: #8ea0d5;"));
     root->addWidget(divider);
 
-    auto *table = new QTableWidget(1, 5, &dlg);
+    auto *table = new QTableWidget(static_cast<int>(loanItems.size()), 5, &dlg);
     table->setHorizontalHeaderLabels({tr("STT"), tr("Mã sách"), tr("Tên sách"), tr("NXB"), tr("Ghi chú")});
     table->verticalHeader()->setVisible(false);
     table->horizontalHeader()->setStretchLastSection(true);
@@ -4070,7 +4285,7 @@ void MainWindow::handleViewLoanReceipt() {
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setSelectionMode(QAbstractItemView::NoSelection);
     table->setAlternatingRowColors(true);
-    table->setFixedHeight(96);
+    table->setFixedHeight(max(96, static_cast<int>(loanItems.size()) * 44 + 48));
     table->setStyleSheet(
         "QTableWidget {"
         " border: 1px solid #8ea0d5;"
@@ -4087,13 +4302,27 @@ void MainWindow::handleViewLoanReceipt() {
         "}"
         "QTableWidget::item { padding: 6px; }");
 
-    table->setItem(0, 0, new QTableWidgetItem(QStringLiteral("1")));
-    table->setItem(0, 1, new QTableWidgetItem(bookId));
-    table->setItem(0, 2, new QTableWidgetItem(bookTitle));
-    table->setItem(0, 3, new QTableWidgetItem(bookPublisher));
-    table->setItem(0, 4, new QTableWidgetItem(noteText));
+    for (int i = 0; i < table->rowCount(); ++i) {
+        const auto &loanItem = loanItems[static_cast<size_t>(i)];
+        const auto bookOpt = findBook(loanItem.getBookId());
+        const QString bookIdText = toQString(loanItem.getBookId());
+        const QString bookTitle = bookOpt.has_value() ? toQString(bookOpt->getTitle()) : bookIdText;
+        const QString bookPublisher = bookOpt.has_value() ? toQString(bookOpt->getPublisher()) : tr("Không rõ");
+        const QString itemStatus = loanStatusText(toQString(loanItem.getStatus()));
+        const QString itemDue = loanItem.getDueDate().isValid() ? toQDate(loanItem.getDueDate()).toString(QStringLiteral("dd/MM/yyyy"))
+                                                                : tr("Không rõ");
+        const QString itemReturn = loanItem.getReturnDate().isValid() ? toQDate(loanItem.getReturnDate()).toString(QStringLiteral("dd/MM/yyyy"))
+                                                                      : tr("Chưa trả");
+        const QString itemNote = tr("%1 | Hạn: %2 | Trả: %3").arg(itemStatus, itemDue, itemReturn);
+
+        table->setItem(i, 0, new QTableWidgetItem(QString::number(i + 1)));
+        table->setItem(i, 1, new QTableWidgetItem(bookIdText));
+        table->setItem(i, 2, new QTableWidgetItem(bookTitle));
+        table->setItem(i, 3, new QTableWidgetItem(bookPublisher));
+        table->setItem(i, 4, new QTableWidgetItem(itemNote));
+        table->setRowHeight(i, 44);
+    }
     table->resizeRowsToContents();
-    table->setRowHeight(0, 44);
 
     root->addWidget(table);
 

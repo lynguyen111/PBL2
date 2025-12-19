@@ -13,6 +13,8 @@ class QDateEdit;
 class QDialogButtonBox;
 class QLabel;
 class QLineEdit;
+class QListWidget;
+class QPushButton;
 
 namespace pbl2::ui{
 
@@ -27,24 +29,30 @@ public:
                QWidget *parent = nullptr);
 
     void presetLoanId(const QString &loanId, bool lockField = true);
-    void presetBook(const QString &bookId);
+    void presetInitialBook(const QString &bookId);
     [[nodiscard]] model::Loan loan() const;
 
 protected:
     void accept() override;
 
 private:
+    bool showItemEditor(int editRow = -1);
+    void refreshItemsList();
     [[nodiscard]] bool validateInputs() const;
     void showError(const QString &message) const;
 
     core::DynamicArray<model::Reader> readers;
     core::DynamicArray<model::Book> books;
+    core::DynamicArray<model::LoanItem> loanItems;
+    int maxBorrowDays{14};
     QLineEdit *loanIdEdit{nullptr};
     QComboBox *readerCombo{nullptr};
-    QComboBox *bookCombo{nullptr};
+    QListWidget *itemsList{nullptr};
+    QPushButton *addItemButton{nullptr};
+    QPushButton *editItemButton{nullptr};
+    QPushButton *removeItemButton{nullptr};
     QLineEdit *staffEdit{nullptr};
     QDateEdit *borrowDateEdit{nullptr};
-    QDateEdit *dueDateEdit{nullptr};
     QLabel *errorLabel{nullptr};
     QDialogButtonBox *buttonBox{nullptr};
     bool editingMode{false};

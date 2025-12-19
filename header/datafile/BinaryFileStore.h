@@ -63,16 +63,27 @@ struct ReaderRecord {
     char notes[512];
 };
 
-struct LoanRecord {
-    char loanId[32];
-    char readerId[32];
+struct LoanItemRecord {
     char bookId[32];
-    DateRecord borrowDate;
+    int32_t quantity;
     DateRecord dueDate;
     DateRecord returnDate;
     char status[32];
     int32_t fine;
+    int32_t extensionCount;
+};
+
+constexpr size_t kMaxLoanItems = 8;
+
+struct LoanRecord {
+    char loanId[32];
+    char readerId[32];
+    DateRecord borrowDate;
+    char status[32];
+    int32_t fine;
     char staffUsername[64];
+    uint32_t itemCount;
+    LoanItemRecord items[kMaxLoanItems];
 };
 
 struct AccountRecord {
@@ -159,6 +170,8 @@ protected:
 
     static LoanRecord packLoan(const model::Loan &value);
     static model::Loan unpackLoan(const LoanRecord &record);
+    static LoanItemRecord packLoanItem(const model::LoanItem &value);
+    static model::LoanItem unpackLoanItem(const LoanItemRecord &record);
 
     static AccountRecord packAccount(const model::Account &value);
     static model::Account unpackAccount(const AccountRecord &record);

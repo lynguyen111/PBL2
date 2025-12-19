@@ -9,9 +9,13 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QCompleter>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
+#include <QMessageBox>
 #include <QPushButton>
+#include <QSet>
 #include <QVariant>
 #include <QVBoxLayout>
 
@@ -21,6 +25,7 @@ namespace {
 
 using pbl2::model::Book;
 using pbl2::model::Loan;
+using pbl2::model::LoanItem;
 using pbl2::model::Reader;
 
 void setupSearchableCombo(QComboBox *combo, const QString &placeholder = QString()) {
@@ -90,27 +95,25 @@ namespace pbl2::ui {
             "  min-width: 90px; min-height: 32px; font-size: 11pt; } "
             "QLabel { font-size: 11pt; } ");
 
+        this->maxBorrowDays = maxBorrowDays > 0 ? maxBorrowDays : 14;
+
         loanIdEdit = new QLineEdit(this);
         readerCombo = new QComboBox(this);
-        bookCombo = new QComboBox(this);
+        itemsList = new QListWidget(this);
+        addItemButton = new QPushButton(tr("Thêm sách"), this);
+        editItemButton = new QPushButton(tr("Sửa"), this);
+        removeItemButton = new QPushButton(tr("Xóa"), this);
         staffEdit = new QLineEdit(this);
         staffEdit->setReadOnly(true);
 
         for (const auto &reader : readers) {
             readerCombo->addItem(displayReader(reader), QVariant(bridge::toQString(reader.getId())));
         }
-        for (const auto &book : books) {
-            const QString bookId = bridge::toQString(book.getId());
-            bookCombo->addItem(displayBook(book), QVariant(bookId));
-        }
 
         setupSearchableCombo(readerCombo, tr("Tìm bạn đọc"));
-        setupSearchableCombo(bookCombo, tr("Tìm sách"));
 
         readerCombo->setCurrentIndex(-1);
-        bookCombo->setCurrentIndex(-1);
         readerCombo->clearEditText();
-        bookCombo->clearEditText();
 
         staffEdit->setText(staffUsername);
 
@@ -119,10 +122,8 @@ namespace pbl2::ui {
         borrowDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
         borrowDateEdit->setDate(bridge::currentDate());
 
-        dueDateEdit = new QDateEdit(this);
-        dueDateEdit->setCalendarPopup(true);
-        dueDateEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
-        dueDateEdit->setDate(bridge::currentDate().addDays(maxBorrowDays > 0 ? maxBorrowDays : 14));
+        itemsList->setSelectionMode(QAbstractItemView::SingleSelection);
+        itemsList->setMinimumHeight(150);
 
         errorLabel = new QLabel(this);
         errorLabel->setAlignment(Qt::AlignCenter);
@@ -137,11 +138,32 @@ namespace pbl2::ui {
         form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
         form->addRow(tr("Mã phiếu"), loanIdEdit);
         form->addRow(tr("Bạn đọc"), readerCombo);
-        form->addRow(tr("Sách"), bookCombo);
         form->addRow(tr("Nhân viên lập phiếu"), staffEdit);
         form->addRow(tr("Ngày mượn"), borrowDateEdit);
-        form->addRow(tr("Ngày trả hạn"), dueDateEdit);
+
+        auto *itemsPanel = new QWidget(this);
+        auto *itemsLayout = new QVBoxLayout(itemsPanel);
+        itemsLayout->setContentsMargins(0, 0, 0, 0);
+        itemsLayout->addWidget(itemsList);
+        auto *buttonRow = new QHBoxLayout;
+        buttonRow->setContentsMargins(0, 0, 0, 0);
+        buttonRow->addWidget(addItemButton);
+        buttonRow->addWidget(editItemButton);
+        buttonRow->addWidget(removeItemButton);
+        buttonRow->addStretch(1);
+        itemsLayout->addLayout(buttonRow);
+        form->addRow(tr("Danh sách sách"), itemsPanel);
         formGroup->setLayout(form);
+
+        connect(addItemButton, &QPushButton::clicked, this, [this]() { showItemEditor(-1); });
+        connect(editItemButton, &QPushButton::clicked, this, [this]() { showItemEditor(itemsList ? itemsList->currentRow() : -1); });
+        connect(removeItemButton, &QPushButton::clicked, this, [this]() {
+            if (!itemsList) return;
+            const int row = itemsList->currentRow();
+            if (row < 0 || static_cast<size_t>(row) >= loanItems.size()) return;
+            loanItems.removeAt(static_cast<core::DynamicArray<model::LoanItem>::SizeType>(row));
+            refreshItemsList();
+        });
 
         buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
         if (auto *okBtn = buttonBox->button(QDialogButtonBox::Ok)) {
@@ -159,6 +181,7 @@ namespace pbl2::ui {
         layout->addWidget(formGroup);
         layout->addWidget(errorLabel);
         layout->addWidget(buttonBox);
+        refreshItemsList();
         setMinimumSize(600, 500);
     }
 
@@ -168,30 +191,166 @@ namespace pbl2::ui {
         loanIdEdit->setReadOnly(editingMode || forceIdReadOnly);
     }
 
-    void LoanDialog::presetBook(const QString &bookId) {
-        if (!bookCombo) return;
+    void LoanDialog::presetInitialBook(const QString &bookId) {
         const QString trimmedId = bookId.trimmed();
         if (trimmedId.isEmpty()) return;
 
-        for (int i = 0; i < bookCombo->count(); ++i) {
-            const QString optionId = bookCombo->itemData(i).toString();
-            if (optionId.compare(trimmedId, Qt::CaseInsensitive) == 0) {
-                bookCombo->setCurrentIndex(i);
-                readerCombo->setFocus();
+        for (const auto &book : books) {
+            const QString id = bridge::toQString(book.getId());
+            if (id.compare(trimmedId, Qt::CaseInsensitive) == 0) {
+                model::LoanItem item;
+                item.setBookId(book.getId());
+                item.setQuantity(1);
+                const QDate due = borrowDateEdit ? borrowDateEdit->date().addDays(maxBorrowDays) : bridge::currentDate().addDays(maxBorrowDays);
+                item.setDueDate(bridge::toCoreDate(due));
+                item.setReturnDate(pbl2::core::Date());
+                item.setStatus(bridge::toCustomString(QStringLiteral("BORROWED")));
+                item.setFine(0);
+                item.setExtensionCount(0);
+                // Avoid duplicates
+                for (const auto &existing : loanItems) {
+                    if (bridge::toQString(existing.getBookId()).compare(id, Qt::CaseInsensitive) == 0) {
+                        return;
+                    }
+                }
+                loanItems.append(item);
+                refreshItemsList();
                 break;
             }
         }
+    }
+
+    bool LoanDialog::showItemEditor(const int editRow) {
+        QDialog dialog(this);
+        dialog.setWindowTitle(editRow >= 0 ? tr("Sửa sách mượn") : tr("Thêm sách mượn"));
+        auto *form = new QFormLayout(&dialog);
+        form->setContentsMargins(16, 16, 16, 16);
+        form->setSpacing(10);
+
+        auto *bookCombo = new QComboBox(&dialog);
+        bookCombo->setEditable(true);
+        bookCombo->setInsertPolicy(QComboBox::NoInsert);
+        auto *dueEdit = new QDateEdit(&dialog);
+        dueEdit->setCalendarPopup(true);
+        dueEdit->setDisplayFormat(QStringLiteral("dd/MM/yyyy"));
+        dueEdit->setDate(borrowDateEdit ? borrowDateEdit->date().addDays(maxBorrowDays) : bridge::currentDate().addDays(maxBorrowDays));
+
+        // Build set of already selected books (exclude the one being edited)
+        QSet<QString> taken;
+        for (int i = 0; i < static_cast<int>(loanItems.size()); ++i) {
+            if (i == editRow) continue;
+            taken.insert(bridge::toQString(loanItems[i].getBookId()).toUpper());
+        }
+
+        const auto existingBookId = (editRow >= 0 && static_cast<size_t>(editRow) < loanItems.size())
+                                        ? bridge::toQString(loanItems[editRow].getBookId())
+                                        : QString();
+
+        for (const auto &book : books) {
+            const QString id = bridge::toQString(book.getId()).trimmed();
+            if (taken.contains(id.toUpper())) continue;
+            bookCombo->addItem(displayBook(book), QVariant(id));
+        }
+
+        if (editRow >= 0 && bookCombo->findData(existingBookId) == -1) {
+            // If the original book is filtered out (shouldn't happen), add it for editing.
+            bookCombo->addItem(existingBookId, QVariant(existingBookId));
+        }
+
+        const int foundIdx = existingBookId.isEmpty() ? -1 : bookCombo->findData(existingBookId);
+        if (foundIdx >= 0) {
+            bookCombo->setCurrentIndex(foundIdx);
+        } else {
+            bookCombo->setCurrentIndex(-1);
+            bookCombo->clearEditText();
+        }
+        setupSearchableCombo(bookCombo, tr("Chọn sách"));
+
+        if (editRow >= 0 && static_cast<size_t>(editRow) < loanItems.size()) {
+            if (loanItems[editRow].getDueDate().isValid()) {
+                dueEdit->setDate(bridge::toQDate(loanItems[editRow].getDueDate()));
+            }
+        }
+
+        form->addRow(tr("Sách"), bookCombo);
+        form->addRow(tr("Hạn trả"), dueEdit);
+
+        auto *dlgButtons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+        dlgButtons->button(QDialogButtonBox::Ok)->setStyleSheet(primaryActionStyle());
+        dlgButtons->button(QDialogButtonBox::Cancel)->setStyleSheet(dangerActionStyle());
+        form->addWidget(dlgButtons);
+        QObject::connect(dlgButtons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+        QObject::connect(dlgButtons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+        if (dialog.exec() != QDialog::Accepted) return false;
+        const QString selectedId = bookCombo->currentData().toString().trimmed();
+        if (selectedId.isEmpty()) {
+            showError(tr("Vui lòng chọn sách."));
+            return false;
+        }
+        if (taken.contains(selectedId.toUpper())) {
+            showError(tr("Mỗi phiếu chỉ chọn một lần cho mỗi sách."));
+            return false;
+        }
+
+        const QDate dueDate = dueEdit->date();
+        if (borrowDateEdit && dueDate < borrowDateEdit->date()) {
+            showError(tr("Ngày trả phải sau ngày mượn."));
+            return false;
+        }
+
+        model::LoanItem item;
+        item.setBookId(bridge::toCustomString(selectedId));
+        item.setQuantity(1);
+        item.setDueDate(bridge::toCoreDate(dueDate));
+        item.setReturnDate(pbl2::core::Date());  // invalid -> chưa trả
+        item.setStatus(bridge::toCustomString(QStringLiteral("BORROWED")));
+        item.setFine(0);
+        item.setExtensionCount(0);
+
+        if (editRow >= 0 && static_cast<size_t>(editRow) < loanItems.size()) {
+            loanItems[static_cast<size_t>(editRow)] = item;
+        } else {
+            loanItems.append(item);
+        }
+
+        refreshItemsList();
+        return true;
+    }
+
+    void LoanDialog::refreshItemsList() {
+        if (!itemsList) return;
+        itemsList->clear();
+        for (const auto &item : loanItems) {
+            const QString bookId = bridge::toQString(item.getBookId());
+            QString title;
+            for (const auto &book : books) {
+                if (bridge::toQString(book.getId()).compare(bookId, Qt::CaseInsensitive) == 0) {
+                    title = bridge::toQString(book.getTitle());
+                    break;
+                }
+            }
+        const QString summary = tr("%1 (%2) - Hạn: %3")
+                                        .arg(title.isEmpty() ? tr("Sách %1").arg(bookId) : title,
+                                             bookId)
+                                        .arg(item.getDueDate().isValid()
+                                                 ? bridge::toQDate(item.getDueDate()).toString(QStringLiteral("dd/MM/yyyy"))
+                                                 : tr("Không rõ"));
+            itemsList->addItem(summary);
+        }
+        editItemButton->setEnabled(itemsList->count() > 0);
+        removeItemButton->setEnabled(itemsList->count() > 0);
     }
 
     Loan LoanDialog::loan() const {
         Loan loan;
         loan.setLoanId(bridge::toCustomString(loanIdEdit->text().trimmed()));
         loan.setReaderId(bridge::toCustomString(readerCombo->currentData().toString()));
-        loan.setBookId(bridge::toCustomString(bookCombo->currentData().toString()));
         loan.setBorrowDate(bridge::toCoreDate(borrowDateEdit->date()));
-        loan.setDueDate(bridge::toCoreDate(dueDateEdit->date()));
         loan.setStatus(bridge::toCustomString(QStringLiteral("BORROWED")));
         loan.setFine(0);
+        loan.setStaffUsername(bridge::toCustomString(staffEdit->text().trimmed()));
+        loan.setItems(loanItems);
         return loan;
     }
 
@@ -199,11 +358,16 @@ namespace pbl2::ui {
         if (loanIdEdit->text().trimmed().isEmpty()) {
             return false;
         }
-        if (readerCombo->currentIndex() < 0 || bookCombo->currentIndex() < 0) {
+        if (readerCombo->currentIndex() < 0) {
             return false;
         }
-        if (dueDateEdit->date() < borrowDateEdit->date()) {
+        if (loanItems.isEmpty()) {
             return false;
+        }
+        const QDate borrowDate = borrowDateEdit ? borrowDateEdit->date() : bridge::currentDate();
+        for (const auto &item : loanItems) {
+            if (!item.getDueDate().isValid()) return false;
+            if (bridge::toQDate(item.getDueDate()) < borrowDate) return false;
         }
         return true;
     }

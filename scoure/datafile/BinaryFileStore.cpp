@@ -1,5 +1,6 @@
 #include "datafile/BinaryFileStore.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 using namespace std;
@@ -39,6 +40,33 @@ struct LegacyReportRequestRecord {
     char notes[256];
     char status[32];
     DateTimeRecord createdAt;
+};
+
+// Legacy loan record without extensionCount
+struct LegacyLoanRecordV0 {
+    char loanId[32];
+    char readerId[32];
+    char bookId[32];
+    DateRecord borrowDate;
+    DateRecord dueDate;
+    DateRecord returnDate;
+    char status[32];
+    int32_t fine;
+    char staffUsername[64];
+};
+
+// Legacy loan record with extensionCount but single book
+struct LegacyLoanRecordV1 {
+    char loanId[32];
+    char readerId[32];
+    char bookId[32];
+    DateRecord borrowDate;
+    DateRecord dueDate;
+    DateRecord returnDate;
+    char status[32];
+    int32_t fine;
+    int32_t extensionCount;
+    char staffUsername[64];
 };
 
 template <typename R>
@@ -245,17 +273,44 @@ model::Reader BinaryFileStore::unpackReader(const ReaderRecord &record) {
     return value;
 }
 
-LoanRecord BinaryFileStore::packLoan(const model::Loan &value) {
-    LoanRecord record{};
-    assignText(record.loanId, sizeof(record.loanId), value.getLoanId());
-    assignText(record.readerId, sizeof(record.readerId), value.getReaderId());
+LoanItemRecord BinaryFileStore::packLoanItem(const model::LoanItem &value) {
+    LoanItemRecord record{};
     assignText(record.bookId, sizeof(record.bookId), value.getBookId());
-    record.borrowDate = packDate(value.getBorrowDate());
+    record.quantity = value.getQuantity();
     record.dueDate = packDate(value.getDueDate());
     record.returnDate = packDate(value.getReturnDate());
     assignText(record.status, sizeof(record.status), value.getStatus());
     record.fine = value.getFine();
+    record.extensionCount = value.getExtensionCount();
+    return record;
+}
+
+model::LoanItem BinaryFileStore::unpackLoanItem(const LoanItemRecord &record) {
+    model::LoanItem value;
+    value.setBookId(CustomString(record.bookId));
+    value.setQuantity(record.quantity);
+    value.setDueDate(unpackDate(record.dueDate));
+    value.setReturnDate(unpackDate(record.returnDate));
+    value.setStatus(CustomString(record.status));
+    value.setFine(record.fine);
+    value.setExtensionCount(record.extensionCount);
+    return value;
+}
+
+LoanRecord BinaryFileStore::packLoan(const model::Loan &value) {
+    LoanRecord record{};
+    assignText(record.loanId, sizeof(record.loanId), value.getLoanId());
+    assignText(record.readerId, sizeof(record.readerId), value.getReaderId());
+    record.borrowDate = packDate(value.getBorrowDate());
+    assignText(record.status, sizeof(record.status), value.getStatus());
+    record.fine = value.getFine();
     assignText(record.staffUsername, sizeof(record.staffUsername), value.getStaffUsername());
+    const auto &items = value.getItems();
+    const size_t count = std::min<size_t>(static_cast<size_t>(items.size()), kMaxLoanItems);
+    record.itemCount = static_cast<uint32_t>(count);
+    for (size_t i = 0; i < count; ++i) {
+        record.items[i] = packLoanItem(items[i]);
+    }
     return record;
 }
 
@@ -263,13 +318,15 @@ model::Loan BinaryFileStore::unpackLoan(const LoanRecord &record) {
     model::Loan value;
     value.setLoanId(CustomString(record.loanId));
     value.setReaderId(CustomString(record.readerId));
-    value.setBookId(CustomString(record.bookId));
     value.setBorrowDate(unpackDate(record.borrowDate));
-    value.setDueDate(unpackDate(record.dueDate));
-    value.setReturnDate(unpackDate(record.returnDate));
     value.setStatus(CustomString(record.status));
     value.setFine(record.fine);
     value.setStaffUsername(CustomString(record.staffUsername));
+    core::DynamicArray<model::LoanItem> items(record.itemCount);
+    for (size_t i = 0; i < record.itemCount && i < kMaxLoanItems; ++i) {
+        items[i] = unpackLoanItem(record.items[i]);
+    }
+    value.setItems(items);
     return value;
 }
 
@@ -437,7 +494,72 @@ bool BinaryFileStore::writeLoans(const DynamicArray<model::Loan> &items, const C
 }
 
 DynamicArray<model::Loan> BinaryFileStore::readLoans(const CustomString &path) {
-    return readCollection<model::Loan, LoanRecord>(path, unpackLoan);
+    DynamicArray<model::Loan> current = readCollection<model::Loan, LoanRecord>(path, unpackLoan);
+    if (!current.isEmpty()) {
+        return current;
+    }
+
+    DynamicArray<LegacyLoanRecordV1> v1Records;
+    if (readfile(path, v1Records) && !v1Records.isEmpty()) {
+        DynamicArray<model::Loan> models(v1Records.size());
+        for (size_t i = 0; i < v1Records.size(); ++i) {
+            const auto &record = v1Records[i];
+            model::Loan value;
+            value.setLoanId(CustomString(record.loanId));
+            value.setReaderId(CustomString(record.readerId));
+            value.setBorrowDate(unpackDate(record.borrowDate));
+            value.setStatus(CustomString(record.status));
+            value.setFine(record.fine);
+            value.setStaffUsername(CustomString(record.staffUsername));
+
+            core::DynamicArray<model::LoanItem> items(1);
+            model::LoanItem item;
+            item.setBookId(CustomString(record.bookId));
+            item.setQuantity(1);
+            item.setDueDate(unpackDate(record.dueDate));
+            item.setReturnDate(unpackDate(record.returnDate));
+            item.setStatus(CustomString(record.status));
+            item.setFine(record.fine);
+            item.setExtensionCount(record.extensionCount);
+            items[0] = item;
+            value.setItems(items);
+            models[i] = value;
+        }
+        writeLoans(models, path);
+        return models;
+    }
+
+    DynamicArray<LegacyLoanRecordV0> legacyRecords;
+    if (readfile(path, legacyRecords) && !legacyRecords.isEmpty()) {
+        DynamicArray<model::Loan> models(legacyRecords.size());
+        for (size_t i = 0; i < legacyRecords.size(); ++i) {
+            const auto &record = legacyRecords[i];
+            model::Loan value;
+            value.setLoanId(CustomString(record.loanId));
+            value.setReaderId(CustomString(record.readerId));
+            value.setBorrowDate(unpackDate(record.borrowDate));
+            value.setStatus(CustomString(record.status));
+            value.setFine(record.fine);
+            value.setStaffUsername(CustomString(record.staffUsername));
+
+            core::DynamicArray<model::LoanItem> items(1);
+            model::LoanItem item;
+            item.setBookId(CustomString(record.bookId));
+            item.setQuantity(1);
+            item.setDueDate(unpackDate(record.dueDate));
+            item.setReturnDate(unpackDate(record.returnDate));
+            item.setStatus(CustomString(record.status));
+            item.setFine(record.fine);
+            item.setExtensionCount(0);
+            items[0] = item;
+            value.setItems(items);
+            models[i] = value;
+        }
+        writeLoans(models, path);
+        return models;
+    }
+
+    return current;
 }
 
 bool BinaryFileStore::writeAccounts(const DynamicArray<model::Account> &items, const CustomString &path) {

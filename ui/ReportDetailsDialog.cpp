@@ -213,6 +213,19 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
     form->addRow(makeCaption(tr("Đến ngày"), this), makeValueLabel(formatDate(bridge::toQDate(report.getToDate())), this));
     form->addRow(makeCaption(tr("Trạng thái"), this), makeValueLabel(displayOrFallback(statusText, tr("Không rõ")), this));
     form->addRow(makeCaption(tr("Ngày tạo"), this), makeValueLabel(formatDateTime(bridge::toQDateTime(report.getCreatedAt())), this));
+    const auto affectedRows = parseAffectedBooks(bridge::toQString(report.getAffectedBooks()), books);
+    QString affectedSummary;
+    for (int i = 0; i < affectedRows.size(); ++i) {
+        const auto &row = affectedRows[i];
+        const QString title = row.title.trimmed();
+        const QString name = title.isEmpty() ? row.id : QStringLiteral("%1 (%2)").arg(title, row.id);
+        if (!affectedSummary.isEmpty()) affectedSummary.append(QStringLiteral(", "));
+        affectedSummary.append(QStringLiteral("%1 x%2").arg(name, QString::number(row.count)));
+    }
+    if (affectedSummary.isEmpty()) {
+        affectedSummary = tr("(Không có sách được liên kết)");
+    }
+
     const auto noteFields = parseNoteFields(notes);
     QSet<QString> existingLabels{
         tr("Nhân viên"),
@@ -220,7 +233,9 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         tr("Đến ngày"),
         tr("Trạng thái"),
         tr("Ngày tạo"),
+        tr("Sách"),
     };
+    form->addRow(makeCaption(tr("Sách"), this), makeValueLabel(affectedSummary, this));
     for (const auto &row : noteFields) {
         if (row.first.trimmed().isEmpty()) continue;
         const QString normalized = row.first.trimmed().toLower();
@@ -236,7 +251,6 @@ QLabel[error="true"] { color: #dc2626; font-size: 10.5pt; padding: 6px; }
         form->addRow(makeCaption(row.first, this), makeValueLabel(row.second, this));
     }
 
-    const auto affectedRows = parseAffectedBooks(bridge::toQString(report.getAffectedBooks()), books);
     QString affectedText;
     for (int i = 0; i < affectedRows.size(); ++i) {
         const auto &row = affectedRows[i];

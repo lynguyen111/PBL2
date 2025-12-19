@@ -1150,7 +1150,7 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "H\341\273\206 TH\341\273\220NG CHO THU\303\212 TRUY\341\273\206N V\303\200 S\303\201CH PBL2", nullptr));
+        MainWindow->setWindowTitle(QString());
         refreshAction->setText(QCoreApplication::translate("MainWindow", "Reset", nullptr));
         logoutAction->setText(QCoreApplication::translate("MainWindow", "Logout", nullptr));
         navigationTitle->setText(QCoreApplication::translate("MainWindow", "Qu\341\272\243n l\303\275 cho thu\303\252 truy\341\273\207n v\303\240 s\303\241ch", nullptr));

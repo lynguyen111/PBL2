@@ -14,7 +14,11 @@ core::Optional<model::Loan> LoanService::findById(const core::CustomString &loan
 }
 
 bool LoanService::createLoan(const model::Loan &loan) const {
-    if (!loan.getBorrowDate().isValid() || !loan.getDueDate().isValid()) return false;
+    if (!loan.getBorrowDate().isValid()) return false;
+    if (loan.getItems().isEmpty()) return false;
+    for (const auto &item : loan.getItems()) {
+        if (!item.getDueDate().isValid()) return false;
+    }
     return addItem(loan);
 }
 
