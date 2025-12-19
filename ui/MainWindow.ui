@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>HỆ THỐNG CHO THUÊ TRUYỆN VÀ SÁCH PBL2</string>
+   <string/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="centralLayout">
@@ -211,6 +211,9 @@
         <string>Trang chủ</string>
        </attribute>
        <layout class="QVBoxLayout" name="homeLayout">
+        <property name="spacing">
+         <number>12</number>
+        </property>
         <property name="leftMargin">
          <number>18</number>
         </property>
@@ -222,9 +225,6 @@
         </property>
         <property name="bottomMargin">
          <number>18</number>
-        </property>
-        <property name="spacing">
-         <number>12</number>
         </property>
         <item>
          <widget class="QLabel" name="homeTitleLabel">

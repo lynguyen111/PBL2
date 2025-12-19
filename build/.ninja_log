@@ -54,3 +54,10 @@
 2904	4394	1765464696462082065	CMakeFiles/pbl2_book.dir/ui/StatsWidget.cpp.o	18f50611410ed19
 81	1840	1766084780907383346	CMakeFiles/pbl2_book.dir/ui/MainWindow.cpp.o	906a0f17bc51ecb1
 1840	1955	1766084782666956200	pbl2_book	4eeaeca2a9ddf033
+26	96	1766131878098959578	pbl2_book_autogen/timestamp	d30b64bfda5748a6
+26	96	1766131878098959578	pbl2_book_autogen/mocs_compilation.cpp	d30b64bfda5748a6
+26	96	1766131878098959578	/Users/nguyenly/Documents/PBL2/PBL2-Bookstore/build/pbl2_book_autogen/timestamp	d30b64bfda5748a6
+26	96	1766131878098959578	/Users/nguyenly/Documents/PBL2/PBL2-Bookstore/build/pbl2_book_autogen/mocs_compilation.cpp	d30b64bfda5748a6
+96	1444	1766131878169053958	CMakeFiles/pbl2_book.dir/ui/ReaderDialog.cpp.o	3e750d51a0c32792
+96	1445	1766131878169269457	CMakeFiles/pbl2_book.dir/ui/StaffDialog.cpp.o	851cce23c53edb65
+1445	1654	1766131879517990857	pbl2_book	4eeaeca2a9ddf033

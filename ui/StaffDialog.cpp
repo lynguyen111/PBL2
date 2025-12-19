@@ -89,12 +89,12 @@ StaffDialog::StaffDialog(QWidget *parent) : QDialog(parent) {
     form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     form->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
     form->addRow(tr("Mã nhân viên"), idEdit);
-    form->addRow(tr("Họ tên"), fullNameEdit);
-    form->addRow(tr("Giới tính"), genderCombo);
-    form->addRow(tr("Địa chỉ"), addressEdit);
-    form->addRow(tr("Số điện thoại"), phoneEdit);
-    form->addRow(tr("Email"), emailEdit);
-    form->addRow(tr("Chức vụ"), positionCombo);
+    form->addRow(tr("Họ tên <span style=\"color:#dc2626;\">*</span>"), fullNameEdit);
+    form->addRow(tr("Giới tính <span style=\"color:#dc2626;\">*</span>"), genderCombo);
+    form->addRow(tr("Địa chỉ <span style=\"color:#dc2626;\">*</span>"), addressEdit);
+    form->addRow(tr("Số điện thoại <span style=\"color:#dc2626;\">*</span>"), phoneEdit);
+    form->addRow(tr("Email <span style=\"color:#dc2626;\">*</span>"), emailEdit);
+    form->addRow(tr("Chức vụ <span style=\"color:#dc2626;\">*</span>"), positionCombo);
     form->addRow(tr("Ghi chú"), notesEdit);
     form->addRow(tr("Ngày sinh"), dobEdit);
     form->addRow(tr("Ngày vào làm"), hireDateEdit);
@@ -201,6 +201,28 @@ bool StaffDialog::validateInputs() const {
     }
     if (fullNameEdit->text().trimmed().isEmpty()) {
         showError(tr("Họ tên không được để trống."));
+        return false;
+    }
+    const QString genderText = genderCombo->currentText().trimmed();
+    if (genderText.isEmpty() || genderText.compare(tr("Chọn"), Qt::CaseInsensitive) == 0) {
+        showError(tr("Giới tính không được để trống."));
+        return false;
+    }
+    if (addressEdit->text().trimmed().isEmpty()) {
+        showError(tr("Địa chỉ không được để trống."));
+        return false;
+    }
+    if (phoneEdit->text().trimmed().isEmpty()) {
+        showError(tr("Số điện thoại không được để trống."));
+        return false;
+    }
+    if (emailEdit->text().trimmed().isEmpty()) {
+        showError(tr("Email không được để trống."));
+        return false;
+    }
+    const QString positionText = positionCombo->currentText().trimmed();
+    if (positionText.isEmpty() || positionText.compare(tr("Chọn"), Qt::CaseInsensitive) == 0) {
+        showError(tr("Chức vụ không được để trống."));
         return false;
     }
     return true;
